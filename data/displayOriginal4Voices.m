@@ -28,8 +28,10 @@ ticksPerSymbol = floor(sampleRate * durationPerSymbol);
 
 % transform to soundvector
 soundvector1 = zeros(symbolicLength * ticksPerSymbol,1);
-currentSymbol = voice(1); startSymbolIndex = 1;
+currentSymbol = voice(1); 
+startSymbolIndex = 1;
 for n = 1:symbolicLength
+    % If voice has changed:
     if voice(n) ~= currentSymbol
         stopSymbolIndex = n-1;
         coveredSoundVectorIndices = ...
@@ -117,5 +119,5 @@ end
 
 % add the two soundvectors to get a 2-voice score
 soundvector = (soundvector1 + soundvector2 + soundvector3 + soundvector4)/ 4;
-sound(soundvector, 10000);
+%sound(soundvector, 10000);
 
