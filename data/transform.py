@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-import sys, os
 import math
 from scipy.io.wavfile import write
 
