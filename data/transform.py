@@ -3,9 +3,9 @@ import numpy as np
 import math
 from scipy.io.wavfile import write
 
-BASE_FREQ = 440
-SAMPLE_RATE = 10000
-SYMBOL_DURATION = 1/20
+BASE_FREQ = 440 # Hz
+SAMPLE_RATE = 10000 # Samples per second
+SYMBOL_DURATION = 1/20 # Seconds per symbol
 TICKS_PER_SYMBOL = math.floor(SAMPLE_RATE * SYMBOL_DURATION)
 
 def process_voice(voice, min_key_nr):
