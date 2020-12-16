@@ -9,7 +9,7 @@ load F.txt -ascii;
 chosenVoice = 1;
 voice = F(:,chosenVoice);
 % plot it to get the Bach feeling 
-% figure(1); plot(voice);
+figure(1); plot(voice);
 
 symbolicLength = length(voice);
 % find minimal key Number
@@ -119,5 +119,6 @@ end
 
 % add the two soundvectors to get a 2-voice score
 soundvector = (soundvector1 + soundvector2 + soundvector3 + soundvector4)/ 4;
+%audiowrite('F_matlab.wav', soundvector, sampleRate);
 %sound(soundvector, 10000);
 
