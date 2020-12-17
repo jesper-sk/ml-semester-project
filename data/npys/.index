@@ -1,0 +1,5 @@
+F-hz		    frequency representation (base freq. 440hz)
+F-pcp		    pitch class profile 
+F-pcp-lab	    labels of pitch class profile
+F-pcp-o		    pitch class profile, octave-invariant
+F-pcp-o-lab	    octave-invariant pcp labels

@@ -1,6 +1,5 @@
 # Music-specific
 *.wav
-F_samples.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
