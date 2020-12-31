@@ -59,6 +59,6 @@ def pcp_to_ssm(x, ignore_silence=True, window_size=20,
 def plot_ssm(ssm, figsize=(10,10), cmap='magma', interpolation='nearest',
              show=True, **kwargs):
     plt.figure(figsize=figsize)
-    plt.matshow(ssm, cmap=cmap, interpolation=interpolation)
+    plt.matshow(ssm, cmap=cmap, interpolation=interpolation, **kwargs)
     if show:
         plt.show()
