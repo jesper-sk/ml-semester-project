@@ -4,4 +4,4 @@
 * Using 5D vector and window encodings might result in very high dimensional dataset with low $N$. Maybe PCA is a good idea.
 * Window encodings during music generation might prove tricksy
 * We need to look at how the output is going to be a probability vector; how can we train that, what kind of distribution are we looking at, etc etc
-* 
+* Maybe switch to a representation incorporating duration instead of a fixed 1/20th second duration

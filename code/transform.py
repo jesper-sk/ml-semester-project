@@ -19,7 +19,7 @@ def process_voice(voice):
             tone_length = (stop_idx-start_idx) * TICKS_PER_SYMBOL
             freq = 0 if curr_symbol == 0 else \
                 BASE_FREQ * 2**((curr_symbol-BASE_KEY) / 12)
-            out[start_idx*TICKS_PER_SYMBOL:stop_idx*TICKS_PER_SYMBOL] = \
+            out[start_idx*TICKS_PER_SYMBOL:stop_idx*TICKS_PER_SYMBOL] =\
                 [math.sin(2 * math.pi * freq * (t+1) / SAMPLE_RATE) for \
                     t in range(tone_length)]
             curr_symbol = voice[i]
