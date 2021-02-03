@@ -1,52 +1,62 @@
 # imports
 import argparse
+
+import sys
 import numpy as np
 from scipy.io.wavfile import write
 
-from inference import make_inferences
-from input import raw_to_features, windowed
-from linear_regression import obtain_optimal_weights
-from output import construct_output
-from transform import get_audio_vector
+from features import FeatureGenerator
+from teacher import TeacherGenerator
+import transform
+from linear_regression import obtain_optimal_model, make_inferences
+from audio import get_audio_vector
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('voice', type=int)
+    parser.add_argument('-v', '--voice', type=int, default=0)
+    parser.add_argument('-d', '--duration', type=int, required=False, 
+                        default=400, help='How many samples to predict')
+    parser.add_argument('-o', '--out', type=str, required=False,
+                        default='Contrapunctus_XIV.wav', 
+                        help='output desination')
     args = parser.parse_args()
 
     voice = args.voice
+    dur_predict = args.duration
+    out_file = args.out
 
-    raw_input = np.genfromtxt('../data/F.txt')
-
-
-    raw_input = np.ndarray.astype(raw_input, int)
-    
-
+    raw_input = np.genfromtxt('../data/F.txt', dtype=int)
+    #raw_input = np.ndarray.astype(raw_input, int)
 
     # Convert raw_input to actual feature vectors
     # Figure something out so that we can use windowed input
         # (over multiple differently sized windows)
-    features = raw_to_features(raw_input)
+    notes, durations = transform.encode_duration(raw_input, voice)
+    features = FeatureGenerator.construct_features(notes, durations)
+    X, indices = transform.windowed(features)
+    # X = transform.biased(X)
+    Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
-    X, indices = windowed(features)
-
-    #Y = construct_output(raw_input, indices, voice)
-
-
-    # TODO (See linear_regression.py) Obtain the weight vector/matrix
-    weights = obtain_optimal_weights(X,features)
-
-    # TODO (See inference.py) Predict the next 20+ seconds
-    #inferences = make_inferences(weights, X[-1, ...], 20)
+    # Train a ridge regression model
+    #alphas = [0, .1, .25, .5, .75, 1, 1.25, 1.5]
+    alphas = [1]
+    lr = obtain_optimal_model(X[:-1,...], Y, alphas)
+    inferences = make_inferences(lr, X[-1,...], dur_predict)
 
     # Concatenate inferences to original data
     # (assume voice is 0-indexed by the user)
-    #raw_out = np.append(np.array(raw_input[voice]), np.array(inferences))
+    raw_out = np.append(np.array(raw_input[voice]), np.array(inferences))
 
     # Convert our wonderfully smart output into a wave file
-    # TODO: Prepare raw_out to be compatible with get_audio_vector
-    #audio_out = get_audio_vector(raw_out)
-    #write('Contrapunctus_XIV.wav', data=raw_out, rate=10000)
+    audio_out = get_audio_vector(raw_out)
+    write(out_file, data=audio_out, rate=10000)
 
     # Enjoy some eargasming Bach!
+
+
+    # MAYBE NOT NECESSARY
+    # TODO (See linear_regression.py) Obtain the weight vector/matrix
+    #weights = obtain_optimal_weights(X,features)
+    # TODO (See inference.py) Predict the next 20+ seconds
+    #inferences = make_inferences(weights, X[-1, ...], 20)

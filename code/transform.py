@@ -1,54 +1,154 @@
-import argparse
-import numpy as np
 import math
-from scipy.io.wavfile import write
+import numpy as np
+from scipy.special import softmax
 
+BASE_KEY = 54 # Key that denotes the base frequency
 BASE_FREQ = 440 # Hz
-SAMPLE_RATE = 10000 # Samples per second
-SYMBOL_DURATION = 1/20 # Seconds per symbol
-TICKS_PER_SYMBOL = math.floor(SAMPLE_RATE * SYMBOL_DURATION)
-BASE_KEY = 54 # int(np.average(vec[np.nonzero(vec)]))
 
-def process_voice(voice):
-    out = np.zeros(voice.shape[0] * TICKS_PER_SYMBOL)
-    curr_symbol = voice[0]
-    start_idx = 0
-    for i in range(voice.shape[0]):
-        if voice[i] != curr_symbol:
-            stop_idx = i-1
-            tone_length = (stop_idx-start_idx) * TICKS_PER_SYMBOL
-            freq = 0 if curr_symbol == 0 else \
-                BASE_FREQ * 2**((curr_symbol-BASE_KEY) / 12)
-            out[start_idx*TICKS_PER_SYMBOL:stop_idx*TICKS_PER_SYMBOL] =\
-                [math.sin(2 * math.pi * freq * (t+1) / SAMPLE_RATE) for \
-                    t in range(tone_length)]
-            curr_symbol = voice[i]
-            start_idx = i
-    return out
+CHROMA = [1,2,3,4,5,6,7,8,9,10,11,12]
+CHROMA_R = 1
 
-def get_audio_vector(vec, voices=None):
-    samples_voice = \
-        np.array([process_voice(vec[:,voice]) for voice in \
-                  voices or range(vec.shape[1])])
-    samples = np.sum(samples_voice, axis=0) / samples_voice.shape[0]
-    m = np.max(np.abs(samples))
-    return (samples/m).astype(np.float32)
+C5 = [1,8,3,10,5,12,7,2,9,4,11,6]
+C5_R = 1
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', type=str)
-    parser.add_argument(
-        '-v', '--voices', type=int, nargs='+', required=False)
-    parser.add_argument('out', type=str)
-    args = parser.parse_args()
-
-    vec = np.genfromtxt(args.input, delimiter=',')
-
-    samples_f32 = get_audio_vector(vec, args.voices)
-    
-    sformat = args.out.split('.')[-1]
-    if sformat == 'wav':
-        write(args.out, SAMPLE_RATE, samples_f32)
+def note_to_vector(x, offset, total):
+    if x == 0: return np.repeat(0., 5)
     else:
-        with open(args.out, 'w') as file:
-            file.write(samples_f32)
+        min_note = offset
+        max_note = offset + total - 1
+
+        note = (x-55) % 12
+
+        chroma_rad = (CHROMA[note] - 1) * (math.pi/6) # 2pi / 12
+        c5_rad = (C5[note] - 1) * (math.pi/6)
+
+        chroma_x = CHROMA_R * math.sin(chroma_rad)
+        chroma_y = CHROMA_R * math.cos(chroma_rad)
+
+        c5_x = C5_R * math.sin(c5_rad)
+        c5_y = C5_R * math.cos(c5_rad)
+
+        n = x - BASE_KEY
+        freq = 2**(n/12) * BASE_FREQ
+
+        min_p = 2 * math.log2(2**((min_note - BASE_KEY)/12) * BASE_FREQ)
+        max_p = 2 * math.log2(2**((max_note - BASE_KEY)/12) * BASE_FREQ)
+
+        pitch = 2 * math.log2(freq) - max_p + ((max_p - min_p)/2)
+
+        return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
+
+def encode_duration(F, voice=0):
+    single = F[..., voice]
+
+    prev = single[0]
+    dur = 0
+
+    durs = []
+    notes = [single[0]]
+
+    for note in single:
+        if note == prev:
+            dur += 1
+        else:
+            notes.append(note)
+            durs.append(dur)
+            prev = note
+            dur = 1
+
+    durs.append(dur)
+
+    durs = np.array(durs)
+    notes = np.array(notes)
+
+    return notes, durs
+
+# def construct_feature(note, duration, fprops):
+#     offset, total = fprops
+#     vector = note_to_vector(note, offset, total)
+#     return np.hstack((duration, vector))
+
+# def construct_features(notes, durations, fprops, inference=False):
+#     offset, total = fprops
+
+#     vecs = np.array([note_to_vector(note, offset, total) for note in notes])
+#     if inference:
+#         print('shape', vecs.shape, 'vecs', vecs)
+
+#     # Normalize durations between -1, 1
+#     durations = durations - durations.mean()
+#     if np.abs(durations).max() == 0:
+#         durations = np.zeros(len(durations))
+#     else:
+#         durations = durations / np.abs(durations).max()
+    
+#     # Normalize logartithmic pitch between -1, 1
+#     # vecs[1,...] = vecs[1,...].mean()
+#     # if np.abs(vecs[1,...]).max() == 0:
+#     #     vecs[1,...] = np.zeros(len(vecs[1,...]))
+#     # else:
+#     #     vecs[1,...] = vecs[1,...] / np.abs(vecs[1,...]).max()
+#     vecs[...,1] = vecs[...,1].mean()
+#     if np.abs(vecs[...,1]).max() == 0:
+#         vecs[...,1] = np.zeros(len(vecs[...,1]))
+#     else:
+#         vecs[...,1] = vecs[...,1] / np.abs(vecs[...,1]).max()
+
+#     return (offset, total, 
+#         np.hstack((
+#             durations[..., None],
+#             vecs)))
+
+def biased(X):
+    return np.hstack(
+        (np.ones((len(X), 1)), X)
+    )
+
+def windowed(X, window_size=10, hop_size=1):
+    hop_size = hop_size or window_size
+    offset = X.shape[0] % (window_size - hop_size)
+
+    indices = range(offset+window_size-1, X.shape[0])\
+        [0 : X.shape[0]-offset : hop_size]
+
+    X_windows = np.array([X[(i-window_size):i, ...].flatten() for i in indices])
+
+    return (X_windows, indices)
+
+# def construct_teacher(notes, durations, indices):
+#     min_note = notes[notes != 0].min()
+#     #print(min_note)
+#     note_vec_len = notes.max() - notes[notes != 0].min() + 1
+
+#     min_dur = durations[1:].min()
+#     max_dur = durations[1:].max()
+#     dur_vec_len = max_dur - min_dur
+
+#     Y = np.zeros((len(indices) - 1, note_vec_len + 1))
+
+#     for (i, wi) in enumerate(indices[:-1]):
+#         note_ohenc = np.zeros(note_vec_len)
+#         if notes[wi+1] == 0:
+#             note_ohenc[0] = 1
+#         else:
+#             note_ohenc[notes[wi+1]-min_note] = 1
+#         dur = (durations[wi+1] - min_dur) / max_dur
+#         Y[i,...] = np.hstack((note_ohenc, dur))
+
+#     return (Y, (min_note, notes.max(), min_dur, max_dur))
+
+# def do_something_with_y(Y, tprops):
+#     min_note, max_note, min_dur, max_dur = tprops
+#     print(Y.shape)
+#     p = softmax(Y[:-1])
+#     print('P:', p)
+#     note = np.random.choice(
+#         np.hstack((0, np.arange(min_note, max_note))),
+#         p=p
+#     )
+#     sample_dur = Y[-1] * max_dur + min_dur
+#     return (note, int(sample_dur))
+
+if __name__ == "__main__":
+    F = np.genfromtxt(r"C:\Users\Jesper\Documents\local study\1-2-ml\ml-semester-project\data\F.txt", dtype=int)
+    pass

@@ -37,6 +37,61 @@ def note_to_vector(x, offset, total):
 
         return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
 
+def encode_duration(F, voice=0):
+    single = F[..., voice]
+
+    prev = single[0]
+    dur = 0
+
+    durs = []
+    notes = [single[0]]
+
+    for note in single:
+        if note == prev:
+            dur += 1
+        else:
+            notes.append(note)
+            durs.append(dur)
+            prev = note
+            dur = 1
+
+    durs.append(dur)
+
+    durs = np.array(durs)
+    notes = np.array(notes)
+
+    return notes, durs
+
+def construct_features(notes, durations):
+    offset = np.min(notes[notes!=0])
+    total = len(np.unique(notes)) - 1 # remove 0
+
+    vecs = np.array([note_to_vector(note, offset, total) for note in notes])
+
+    # Normalize durations between -1, 1
+    durations = durations - durations.mean()
+    if np.abs(durations).max() == 0:
+        durations = np.zeros(len(durations))
+    else:
+        durations = durations / np.abs(durations).max()
+    
+    # Normalize logartithmic pitch between -1, 1
+    vecs[1,...] = vecs[1,...].mean()
+    if np.abs(vecs[1,...]).max() == 0:
+        vecs[1,...] = np.zeros(len(vecs[1,...]))
+    else:
+        vecs[1,...] = vecs[1,...] / np.abs(vecs[1,...]).max()
+
+    return (offset, total, 
+        np.hstack((
+            durations[..., None],
+            vecs)))
+
+def biased(X):
+    return np.hstack(
+        (np.ones((len(X), 1)), X)
+    )
+
 def raw_to_features(F, voice=0):
     voice = F[..., voice]
 
@@ -70,11 +125,11 @@ def raw_to_features(F, voice=0):
     else:
         durs = durs / np.abs(durs).max()
     
-    vecs[1,...] = vecs[1,...] = vecs[1,...].mean()
+    vecs[1,...] = vecs[1,...].mean()
     vecs[1,...] = vecs[1,...] / np.abs(vecs[1,...]).max()
 
     # Return
-    out = np.hstack((durs[...,None], vecs))
+    out = np.hstack((np.ones(vecs.shape[1]), durs[...,None], vecs))
     return out
 
 def windowed(X, window_size=10, hop_size=1):
@@ -91,5 +146,5 @@ def windowed(X, window_size=10, hop_size=1):
 if __name__ == "__main__":
     F = np.genfromtxt(r"C:\Users\Jesper\Documents\local study\1-2-ml\ml-semester-project\data\F.txt", dtype=int)
 
-    X = windowed(raw_to_features(F))
-    #print(X[0:10,...])
+    X, _ = windowed(raw_to_features(F))
+    print(X.shape)
