@@ -40,22 +40,28 @@ if __name__ == "__main__":
     Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
     # Train a ridge regression model
-    # alphas = [0, .1, .25, .5, .75, 1, 1.25, 1.5]
-    alphas = [1]
+    alphas = [0, .1, .25, .5, .75, 1, 1.25, 1.5]
+    # alphas = [1]
     lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
     inferences = make_inferences(lr, X[-1, ...], dur_predict)
 
     # Concatenate inferences to original data
     # (assume voice is 0-indexed by the user)
-    raw_out = np.array(inferences).reshape(1, -1).T
+    # raw_out = np.array(inferences).reshape(1, -1).T
     # raw_out = np.append(np.array(raw_input[..., voice]),
     #                     np.array(inferences))
+    print(raw_input[-400:, voice].shape)
+    print(np.array(inferences).shape)
+    raw_out = np.hstack((raw_input[-400:, voice], np.array(inferences))).reshape(1, -1)
+    print(raw_out.shape)
 
     # Convert our wonderfully smart output into a wave file
-    audio_out = get_audio_vector(raw_out, [0])
+    audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T, [voice])
     write(out_file, data=audio_out, rate=10000)
 
-    visualize_notes(raw_out.squeeze(), raw_input[-400:, voice])
+    write('combined.wav', data=get_audio_vector(raw_out.T, [voice]), rate=10000)
+
+    visualize_notes(inferences, raw_input[-400:, voice])
 
     # Enjoy some eargasming Bach!
 

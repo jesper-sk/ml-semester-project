@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from scipy.special import softmax
 
@@ -15,10 +16,10 @@ class TeacherGenerator:
         cls._max_note = notes.max()
         note_vec_len = cls._max_note - cls._min_note + 1
 
-        cls._min_dur = durations[1:].min()
-        cls._max_dur = durations[1:].max()
-        # dur_vec_len = cls._max_dur - cls._min_dur
-
+        cls._min_dur = durations[notes != 0].min()
+        cls._max_dur = durations[notes != 0].max()
+        print('min_dur:', cls._min_dur, 'max_dur:', cls._max_dur)
+        # dur_vec_len = cls._max_dur - cls._min_dur        
         cls._init = True
 
         Y = np.zeros((len(indices) - 1, note_vec_len + 1))
@@ -35,7 +36,7 @@ class TeacherGenerator:
         return Y
 
     @classmethod
-    def do_something_with_y(cls, Y):
+    def y_to_note_dur(cls, Y):
         assert cls._init
         p = softmax(Y[:-1])
         note = np.random.choice(
@@ -43,4 +44,4 @@ class TeacherGenerator:
             p=p
         )
         sample_dur = Y[-1] * cls._max_dur + cls._min_dur
-        return (int(note), int(sample_dur))
+        return (int(note), int(math.ceil(sample_dur)))
