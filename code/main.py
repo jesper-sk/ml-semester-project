@@ -52,14 +52,17 @@ if __name__ == "__main__":
     #                     np.array(inferences))
     print(raw_input[-400:, voice].shape)
     print(np.array(inferences).shape)
-    raw_out = np.hstack((raw_input[-400:, voice], np.array(inferences))).reshape(1, -1)
+    raw_out = np.hstack((raw_input[-400:, voice], np.array(inferences)))\
+        .reshape(1, -1)
     print(raw_out.shape)
 
     # Convert our wonderfully smart output into a wave file
-    audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T, [voice])
+    audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T,
+                                 [voice])
     write(out_file, data=audio_out, rate=10000)
 
-    write('combined.wav', data=get_audio_vector(raw_out.T, [voice]), rate=10000)
+    write('combined.wav', data=get_audio_vector(raw_out.T, [voice]),
+          rate=10000)
 
     visualize_notes(inferences, raw_input[-400:, voice])
 

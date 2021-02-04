@@ -42,17 +42,6 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
 
     feat_true = FeatureGenerator.construct_single_feature(note_true, dur_true)
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
-    # x = [1, 2]
-    # y = [3, 4]
-    #> d = sqrt(1^2 - 3^2) + sqrt(2^2 - 4^2) = sqrt(9-1) + sqrt(16-4) = sqrt(8) + sqrt(12) = 7
-
-    # d = sqrt(sum((x-y)^2))
-    # d = sqrt((1-3)^2 + (2-4)^2) = sqrt(4+4) = sqrt(8)
-    # MSE = sum((x-y)^2) / N
-    # SSE = sum((x-y)^2)
-    # x = -b +- sqrt(b^2 - 4ac)/2a
-
-    # sqrt(sum((x-y)^2))
     return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
@@ -88,7 +77,7 @@ def make_inferences(lr, x, dur_predict):
         print('{0:0=3d}'.format(inf_time),
               ''.join(progress) + '>'
               + ''.join([' ' for i in range(100-len(progress))]) + '|')
-    
+
     out = np.array([])
     for inf in inferences:
         out = np.append(out, np.repeat(inf.note, inf.duration))
