@@ -28,7 +28,7 @@ def process_voice(voice):
     return out
 
 
-def get_audio_vector(vec, voices=None):
+def get_audio_vector(vec, voices=[0]):
     samples_voice = \
         np.array([process_voice(vec[:, voice]) for voice in
                   voices or range(vec.shape[1])])

@@ -21,6 +21,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--out', type=str, required=False,
                         default='Contrapunctus_XIV.wav',
                         help='output desination')
+    parser.add_argument('-p', '--plot', type=bool, required=False,
+                        default=False)
     args = parser.parse_args()
 
     voice = args.voice
@@ -29,7 +31,8 @@ if __name__ == "__main__":
 
     raw_input = np.genfromtxt('../data/F.txt', dtype=int)
     # raw_input = np.ndarray.astype(raw_input, int)
-
+    
+    print('voice:', voice)
     # Convert raw_input to actual feature vectors
     # Figure something out so that we can use windowed input
     # (over multiple differently sized windows)
@@ -56,20 +59,13 @@ if __name__ == "__main__":
         .reshape(1, -1)
     print(raw_out.shape)
 
-    # Convert our wonderfully smart output into a wave file
-    audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T,
-                                 [voice])
+    # Convert predicted notes into a wave file
+    audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T)
     write(out_file, data=audio_out, rate=10000)
 
     write('combined.wav', data=get_audio_vector(raw_out.T, [voice]),
           rate=10000)
-
     visualize_notes(inferences, raw_input[-400:, voice])
 
     # Enjoy some eargasming Bach!
-
-    # MAYBE NOT NECESSARY
-    # TODO (See linear_regression.py) Obtain the weight vector/matrix
-    # weights = obtain_optimal_weights(X,features)
-    # TODO (See inference.py) Predict the next 20+ seconds
-    # inferences = make_inferences(weights, X[-1, ...], 20)
+    print("=== DONE ===")

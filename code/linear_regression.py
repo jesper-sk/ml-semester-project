@@ -46,13 +46,16 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
 
 
 def make_inferences(lr, x, dur_predict):
+    backtrack = 0
+    max_backtrack = 1000
     inferences = []
     last_x = x
     while get_inferenced_time(inferences) < dur_predict:
         Y = lr.predict(x.reshape(1, -1))
         inference = Inference(TeacherGenerator.y_to_note_dur(Y.squeeze()))
 
-        if inference.duration < 1 and inferences:
+        if inference.duration < 1 and inferences and backtrack < max_backtrack:
+            backtrack += 1
             Y = lr.predict(last_x.reshape(1, -1))
             inf = Inference(TeacherGenerator.y_to_note_dur(
                 Y.squeeze()
@@ -72,11 +75,11 @@ def make_inferences(lr, x, dur_predict):
                 )
             ))
             assert last_x is not x
-        inf_time = get_inferenced_time(inferences)
-        progress = ['=' for i in range(int(inf_time/dur_predict*100-1))]
-        print('{0:0=3d}'.format(inf_time),
-              ''.join(progress) + '>'
-              + ''.join([' ' for i in range(100-len(progress))]) + '|')
+        # inf_time = get_inferenced_time(inferences)
+        # progress = ['=' for i in range(int(inf_time/dur_predict*100-1))]
+        # print('{0:0=3d}'.format(inf_time),
+        #       ''.join(progress) + '>'
+        #       + ''.join([' ' for i in range(100-len(progress))]) + '|')
 
     out = np.array([])
     for inf in inferences:
