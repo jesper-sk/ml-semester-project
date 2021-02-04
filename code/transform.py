@@ -2,24 +2,26 @@ import math
 import numpy as np
 from scipy.special import softmax
 
-BASE_KEY = 54 # Key that denotes the base frequency
-BASE_FREQ = 440 # Hz
+BASE_KEY = 54  # Key that denotes the base frequency
+BASE_FREQ = 440  # Hz
 
-CHROMA = [1,2,3,4,5,6,7,8,9,10,11,12]
+CHROMA = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 CHROMA_R = 1
 
-C5 = [1,8,3,10,5,12,7,2,9,4,11,6]
+C5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
 C5_R = 1
 
+
 def note_to_vector(x, offset, total):
-    if x == 0: return np.repeat(0., 5)
+    if x == 0:
+        return np.repeat(0., 5)
     else:
         min_note = offset
         max_note = offset + total - 1
 
         note = (x-55) % 12
 
-        chroma_rad = (CHROMA[note] - 1) * (math.pi/6) # 2pi / 12
+        chroma_rad = (CHROMA[note] - 1) * (math.pi/6)  # 2pi / 12
         c5_rad = (C5[note] - 1) * (math.pi/6)
 
         chroma_x = CHROMA_R * math.sin(chroma_rad)
@@ -37,6 +39,7 @@ def note_to_vector(x, offset, total):
         pitch = 2 * math.log2(freq) - max_p + ((max_p - min_p)/2)
 
         return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
+
 
 def encode_duration(F, voice=0):
     single = F[..., voice]
@@ -81,7 +84,7 @@ def encode_duration(F, voice=0):
 #         durations = np.zeros(len(durations))
 #     else:
 #         durations = durations / np.abs(durations).max()
-    
+
 #     # Normalize logartithmic pitch between -1, 1
 #     # vecs[1,...] = vecs[1,...].mean()
 #     # if np.abs(vecs[1,...]).max() == 0:
@@ -94,24 +97,27 @@ def encode_duration(F, voice=0):
 #     else:
 #         vecs[...,1] = vecs[...,1] / np.abs(vecs[...,1]).max()
 
-#     return (offset, total, 
+#     return (offset, total,
 #         np.hstack((
 #             durations[..., None],
 #             vecs)))
+
 
 def biased(X):
     return np.hstack(
         (np.ones((len(X), 1)), X)
     )
 
+
 def windowed(X, window_size=10, hop_size=1):
     hop_size = hop_size or window_size
     offset = X.shape[0] % (window_size - hop_size)
 
-    indices = range(offset+window_size-1, X.shape[0])\
-        [0 : X.shape[0]-offset : hop_size]
+    indices = (range(offset+window_size-1, X.shape[0])
+               [0:X.shape[0]-offset:hop_size])
 
-    X_windows = np.array([X[(i-window_size):i, ...].flatten() for i in indices])
+    X_windows = np.array([X[(i-window_size):i, ...].flatten()
+                         for i in indices])
 
     return (X_windows, indices)
 
@@ -149,6 +155,8 @@ def windowed(X, window_size=10, hop_size=1):
 #     sample_dur = Y[-1] * max_dur + min_dur
 #     return (note, int(sample_dur))
 
+
 if __name__ == "__main__":
-    F = np.genfromtxt(r"C:\Users\Jesper\Documents\local study\1-2-ml\ml-semester-project\data\F.txt", dtype=int)
+    F = np.genfromtxt(r"C:\Users\Jesper\Documents\local study\1-2-ml\ml-"
+                      + r"semester-project\data\F.txt", dtype=int)
     pass

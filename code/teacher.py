@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import softmax
 
+
 class TeacherGenerator:
     _init = False
     _min_note = 0
@@ -16,7 +17,7 @@ class TeacherGenerator:
 
         cls._min_dur = durations[1:].min()
         cls._max_dur = durations[1:].max()
-        dur_vec_len = cls._max_dur - cls._min_dur
+        # dur_vec_len = cls._max_dur - cls._min_dur
 
         cls._init = True
 
@@ -29,7 +30,7 @@ class TeacherGenerator:
             else:
                 note_ohenc[notes[wi+1]-cls._min_note] = 1
             dur = (durations[wi+1] - cls._min_dur) / cls._max_dur
-            Y[i,...] = np.hstack((note_ohenc, dur))
+            Y[i, ...] = np.hstack((note_ohenc, dur))
 
         return Y
 
