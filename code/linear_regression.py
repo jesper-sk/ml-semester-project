@@ -36,25 +36,34 @@ def obtain_optimal_model(X, Y, alphas):
 
 def custom_scorer(Y_true, Y_pred, **kwargs):
     note_true, dur_true = TeacherGenerator.y_to_note_dur(
-        Y_true.squeeze())
+        Y_true.squeeze(), sampler=TeacherGenerator.take_argmax)
     note_pred, dur_pred = TeacherGenerator.y_to_note_dur(
-        Y_pred.squeeze())
+        Y_pred.squeeze(), sampler=TeacherGenerator.take_argmax)
 
     feat_true = FeatureGenerator.construct_single_feature(note_true, dur_true)
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
+    
     return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
-def make_inferences(lr, x, dur_predict):
+def make_inferences(lr, x, dur_predict, sampler):
     backtrack = 0
     max_backtrack = 1000
     inferences = []
     last_x = x
     while get_inferenced_time(inferences) < dur_predict:
         Y = lr.predict(x.reshape(1, -1))
-        inference = Inference(TeacherGenerator.y_to_note_dur(Y.squeeze()))
+        inference = Inference(
+            TeacherGenerator.y_to_note_dur(
+                Y.squeeze(), sampler=sampler
+            )
+        )
 
         if inference.duration < 1 and inferences and backtrack < max_backtrack:
+            # Just to make sure that backtrack doesn't happen anymore.
+            # Don't think it will ever, so might as well get rid of it 
+            # some time. 
+            assert False
             backtrack += 1
             Y = lr.predict(last_x.reshape(1, -1))
             inf = Inference(TeacherGenerator.y_to_note_dur(

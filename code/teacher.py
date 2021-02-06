@@ -43,23 +43,57 @@ class TeacherGenerator:
         return Y
 
     @classmethod
-    def y_to_note_dur(cls, Y):
+    def sample_linear(cls, range, p):
+        p[p < 0] = 0
+        p /= p.sum()
+        return np.random.choice(range, p=p)
+
+    @classmethod
+    def sample_softmax(cls, range, p):
+        p = softmax(p)
+        return np.random.choice(range, p=p)
+
+    @classmethod
+    def take_argmax(cls, range, p):
+        return range[np.argmax(p)]
+
+    @classmethod
+    def y_to_note_dur(cls, Y, sampler=sample_linear):
         assert cls._init
-        p1 = softmax(Y[:-19])
-        note = np.random.choice(
+        #print(Y[:-19])
+        # p1 = Y[:-19]
+        # p1[p1 < 0] = 0
+        # p1 /= p1.sum()
+        # #p1 = softmax(p1)
+        # #print(p1)
+        # note = np.random.choice(
+        #     np.hstack((0, np.arange(cls._min_note, cls._max_note))),
+        #     p=p1
+        # )
+
+        note = sampler(
             np.hstack((0, np.arange(cls._min_note, cls._max_note))),
-            p=p1
+            Y[:-19]
+        )
+        dur = sampler(
+            np.hstack((1, np.arange(1, 36, 2))),
+            Y[-19:]
         )
 
-        # p2 = softmax(Y[-19:])
+        # p2 = Y[-19:]
+        # p2[p2 < 0] = 0
+        # p2 /= p2.sum()
+        # # p2 = softmax(Y[-19:])
         # dur = np.random.choice(
         #     np.hstack((1, np.arange(1, 36, 2))),
         #     p=p2
         # )
 
-        ind = np.argmax(Y[-19:])
-        dur = np.hstack((1, np.arange(2, 37, 2)))[ind]
+        # ind = np.argmax(Y[-19:])
+        # dur = np.hstack((1, np.arange(2, 37, 2)))[ind]
         # print(p2)
 
         # sample_dur = Y[-1] * cls._max_dur + cls._min_dur
         return (int(note), int(dur))  # int(math.ceil(sample_dur)))
+
+
