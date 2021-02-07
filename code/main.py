@@ -1,5 +1,6 @@
 # imports
 import argparse
+import sys
 
 import numpy as np
 from scipy.io.wavfile import write
@@ -51,11 +52,28 @@ if __name__ == "__main__":
 
     raw_input = raw_input[args.offset:, ...]
 
+    if args.single_model:
+        
+        chords, durations = transform.encode_duration(raw_input)
+        features = FeatureGenerator.construct_chord_features(chords, durations)
+        X, indices = transform.windowed(
+            features, window_size=args.window_size
+        )
+        print("Signal shape: %s" % str(X.shape))
+
+        # TODO: PCA if n>=N?
+
+        Y = TeacherGenerator.construct_chord_teacher(chords, durations, indices)
+        print("Teacher shape:", Y.shape)
+
+        sys.exit()
+
+    out = None
     all_voice_inferences = []
     for voice in voices:
 
-        notes, durations = transform.encode_duration(raw_input)
-        features = FeatureGenerator.construct_chord_features(notes, durations)
+        notes, durations = transform.encode_duration(raw_input, voice)
+        features = FeatureGenerator.construct_features(notes, durations)
         X, indices = transform.windowed(
             features, window_size=args.window_size
         )

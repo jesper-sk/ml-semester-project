@@ -9,6 +9,7 @@ class TeacherGenerator:
     _max_note = 0
     _min_dur = 0
     _max_dur = 0
+    _dur_vec_len = 0
 
     @classmethod
     def construct_teacher(cls, notes, durations, indices):
@@ -39,6 +40,36 @@ class TeacherGenerator:
                 dur_ohenc[durations[wi+1]//2] = 1
 
             Y[i, ...] = np.hstack((note_ohenc, dur_ohenc))
+
+        return Y
+
+    @classmethod
+    def construct_chord_teacher(cls, chords, durations, indices):
+        cls._min_note = chords[chords != 0].min()
+        cls._max_note = chords.max()
+        note_vec_len = cls._max_note - cls._min_note
+
+        cls._min_dur = durations[np.any(chords!=0, axis=1)].min()
+        cls._max_dur = durations[np.any(chords!=0, axis=1)].max()
+        cls._dur_vec_len = (cls._max_dur - cls._min_dur)//2 + 1
+        # print('min_dur:', cls._min_dur, 'max_dur:', cls._max_dur)
+
+        cls._init = True
+
+        Y = np.zeros((len(indices) - 1, note_vec_len*4 + cls._dur_vec_len))
+
+        for (i, wi) in enumerate(indices[:-1]):
+            note_ohenc = np.zeros(note_vec_len*4)
+            for v in range(4):
+                if chords[wi+1, v] == 0:
+                    note_ohenc[v*note_vec_len] = 1
+                else:
+                    note_ohenc[v*note_vec_len + chords[wi+1, v]-cls._min_note]
+                
+            dur_ohenc = np.zeros(cls._dur_vec_len)
+            dur_ohenc[durations[wi+1]//2] = 1
+
+            Y[i] = np.hstack((note_ohenc, dur_ohenc))
 
         return Y
 

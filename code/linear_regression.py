@@ -12,12 +12,12 @@ class Inference:
         self.note, self.duration = values
 
 
-def obtain_optimal_model(X, Y, alphas):
+def obtain_optimal_model(X, Y, alphas, normalize=False):
     best_alpha = None
     best_mean_score = -np.inf
     for a in alphas:
         scores = []
-        lr = Ridge(alpha=a)
+        lr = Ridge(alpha=a, normalize=normalize)
         scores = cross_val_score(
             lr, X, Y, cv=X.shape[0],
             scoring=make_scorer(custom_scorer, greater_is_better=True)
@@ -29,7 +29,7 @@ def obtain_optimal_model(X, Y, alphas):
             best_mean_score = scores.mean()
     assert best_alpha is not None
     print("Best alpha:", best_alpha, 'Best mean score:', best_mean_score)
-    best_lr = Ridge(best_alpha)
+    best_lr = Ridge(best_alpha, normalize=normalize)
     best_lr.fit(X, Y)
     return best_lr
 
