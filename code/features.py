@@ -69,6 +69,20 @@ class FeatureGenerator:
         #     vecs[...,1] = np.zeros(len(vecs[...,1]))
         # else:
         #     vecs[...,1] /= cls._logpitch_amax
+    @classmethod
+    def construct_chord_features(cls, chords, durations):
+        cls._note_offset = np.min(chords[chords != 0])
+        cls._note_total = len(np.unique(chords)) - 1
+
+        vecs = np.array(
+            [note_to_vector(note, cls._note_offset, cls._note_total)
+             for note in chords]
+        )
+
+        cls._init = True
+
+        features = np.hstack((durations[..., None], vecs))
+        return features
 
     @classmethod
     def construct_single_feature(cls, note, duration):

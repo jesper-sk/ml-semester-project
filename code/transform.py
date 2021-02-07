@@ -13,13 +13,15 @@ C5_R = 1
 
 
 def note_to_vector(x, offset, total):
-    if x == 0:
+    if isinstance(x, np.ndarray):
+        return np.hstack(tuple([note_to_vector(xi, offset, total) for xi in x]))
+    elif x == 0:
         return np.repeat(0., 5)
     else:
         min_note = offset
         max_note = offset + total - 1
 
-        note = (x-55) % 12
+        note = (x-BASE_KEY) % 12
 
         chroma_rad = (CHROMA[note] - 1) * (math.pi/6)  # 2pi / 12
         c5_rad = (C5[note] - 1) * (math.pi/6)
@@ -41,7 +43,7 @@ def note_to_vector(x, offset, total):
         return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
 
 
-def encode_duration(F, voice=0):
+def encode_note_duration(F, voice=0):
     single = F[..., voice]
 
     prev = single[0]
@@ -65,6 +67,31 @@ def encode_duration(F, voice=0):
     notes = np.array(notes)
 
     return notes, durs
+
+def encode_duration(F, voice=None):
+    root = F if voice is None else F[..., voice]
+
+    prev = root[0]
+    dur = 0
+
+    durs = []
+    items = [root[0]]
+
+    for item in root:
+        if np.all(item==prev):
+            dur += 1
+        else:
+            items.append(item)
+            durs.append(dur)
+            prev = item
+            dur = 1
+    
+    durs.append(dur)
+
+    durs = np.array(durs)
+    items = np.array(items)
+
+    return items, durs
 
 # def construct_feature(note, duration, fprops):
 #     offset, total = fprops

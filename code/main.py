@@ -27,6 +27,7 @@ if __name__ == "__main__":
                         default=42) # It is the answer to the universe after all
     parser.add_argument('--offset', type=int, default=0, required=False)
     parser.add_argument('--sampler', type=str, default='linear')
+    parser.add_argument('--single_model', action='store_true', required=False)
     args = parser.parse_args()
 
     voices = args.voices or [args.voice]
@@ -42,51 +43,61 @@ if __name__ == "__main__":
     raw_input = np.genfromtxt('../data/F.txt', dtype=int)
     # raw_input = np.ndarray.astype(raw_input, int)
 
-    raw_input = raw_input[args.offset+1:, ...]
-    
-    out = None
+    raw_input = raw_input[args.offset:, ...]
 
-    for voice in voices:
+    if args.single_model:
 
-        print('\nvoice:', voice)
-        # Convert raw_input to actual feature vectors
-        # Figure something out so that we can use windowed input
-        # (over multiple differently sized windows)
-        notes, durations = transform.encode_duration(raw_input, voice)
-        features = FeatureGenerator.construct_features(notes, durations)
+        notes, durations = transform.encode_duration(raw_input)
+        features = FeatureGenerator.construct_chord_features(notes, durations)
         X, indices = transform.windowed(
             features, window_size=args.window_size
         )
         print("features shape: %s" % str(X.shape))
-        Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
-        # Train a ridge regression model
-        alphas = [.1, .25, .5, .75, 1, 1.25, 1.5]
-        lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
-        inferences = make_inferences(
-            lr, X[-1, ...], dur_predict, sampler)
+    else:
+        out = None
 
-        # Ensure each inference has the same size
-        inferences = inferences[:dur_predict]
+        for voice in voices:
 
-        # Add current voice inference to total
-        if out is None:
-            out = np.array(inferences).reshape(1,-1).T
-            print(out.shape)
-        else:
-            out = np.hstack((out, np.array(inferences).reshape(1,-1).T))
+            print('\nvoice:', voice)
+            # Convert raw_input to actual feature vectors
+            # Figure something out so that we can use windowed input
+            # (over multiple differently sized windows)
+            notes, durations = transform.encode_duration(raw_input, voice)
+            features = FeatureGenerator.construct_features(notes, durations)
+            X, indices = transform.windowed(
+                features, window_size=args.window_size
+            )
+            print("features shape: %s" % str(X.shape))
+            Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
-        write(
-            '%s (voice %s).wav' % (out_file, voice), rate=10000,
-            data=get_audio_vector(np.array(inferences).reshape(1,-1).T)
-        )
+            # Train a ridge regression model
+            alphas = [.1, .25, .5, .75, 1, 1.25, 1.5]
+            lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
+            inferences = make_inferences(
+                lr, X[-1, ...], dur_predict, sampler)
 
-        if args.plot:
-            visualize_notes(inferences, raw_input[-dur_predict:, voice])
+            # Ensure each inference has the same size
+            inferences = inferences[:dur_predict]
 
-    if len(voices) >= 2:
-        audio_out = get_audio_vector(out, voices=voices)
-        write("%s.wav" % out_file, data=audio_out, rate=10000)
+            # Add current voice inference to total
+            if out is None:
+                out = np.array(inferences).reshape(1,-1).T
+                print(out.shape)
+            else:
+                out = np.hstack((out, np.array(inferences).reshape(1,-1).T))
+
+            write(
+                '%s (voice %s).wav' % (out_file, voice), rate=10000,
+                data=get_audio_vector(np.array(inferences).reshape(1,-1).T)
+            )
+
+            if args.plot:
+                visualize_notes(inferences, raw_input[-dur_predict:, voice])
+
+        if len(voices) >= 2:
+            audio_out = get_audio_vector(out, voices=voices)
+            write("%s.wav" % out_file, data=audio_out, rate=10000)
 
     # Concatenate inferences to original data
     # (assume voice is 0-indexed by the user)
