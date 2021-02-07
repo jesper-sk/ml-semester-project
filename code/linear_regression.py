@@ -90,10 +90,10 @@ def make_inferences(lr, x, dur_predict, sampler):
         #       ''.join(progress) + '>'
         #       + ''.join([' ' for i in range(100-len(progress))]) + '|')
 
-    out = np.array([])
-    for inf in inferences:
-        out = np.append(out, np.repeat(inf.note, inf.duration))
-    return out
+    # out = np.array([])
+    # for inf in inferences:
+    #     out = np.append(out, np.repeat(inf.note, inf.duration))
+    return inferences
 
 
 def get_inferenced_time(inferences):
