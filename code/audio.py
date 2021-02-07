@@ -2,6 +2,8 @@ import argparse
 import numpy as np
 import math
 from scipy.io.wavfile import write
+from mido import Message, MidiTrack, MidiFile, MetaMessage,\
+                 bpm2tempo, second2tick
 
 BASE_FREQ = 440  # Hz
 SAMPLE_RATE = 10000  # Samples per second
@@ -35,6 +37,36 @@ def get_audio_vector(vec, voices=[0]):
     samples = np.sum(samples_voice, axis=0) / samples_voice.shape[0]
     m = np.max(np.abs(samples))
     return (samples/m).astype(np.float32)
+
+
+def inferences_to_samples(inferences, dur_predict):
+    out = []
+    for inf in inferences:
+        out = np.append(out, np.repeat(inf.note, inf.duration))
+    return out[:dur_predict]
+
+
+def save_inferences_to_midi(inferences, filename='Contrapunctus_XIV.mid'):
+    print('Producing Midi file...')
+    outfile = MidiFile()
+    temp = bpm2tempo(96)  # or 76?
+    # print('ticks_per_beat:', outfile.ticks_per_beat)
+    for voice in range(len(inferences)):
+        track = MidiTrack()
+        outfile.tracks.append(track)
+        track.append(MetaMessage('set_tempo', tempo=temp))
+        track.append(Message('program_change', program=1))
+
+        for inf in inferences[voice]:
+            t = int(second2tick(inf.duration / 20, outfile.ticks_per_beat, temp))
+            track.append(Message('note_on', velocity=45, note=inf.note, 
+                                 time=t))
+            track.append(Message('note_off', velocity=50, note=inf.note, 
+                                 time=t))
+
+    outfile.save(filename)
+    print('MidiFile saved...')
+    return filename
 
 
 if __name__ == '__main__':
