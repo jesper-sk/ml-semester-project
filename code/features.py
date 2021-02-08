@@ -85,10 +85,23 @@ class FeatureGenerator:
         return features
 
     @classmethod
-    def construct_single_feature(cls, note, duration):
+    def construct_single_feature(cls, note, duration, normalize=True):
+        assert cls._init
         vector = note_to_vector(
             note,
             cls._note_offset,
             cls._note_total)
         feature = np.hstack((duration, vector))
-        return cls.feature_normalised(feature)
+        return cls.feature_normalised(feature) if normalize else feature
+
+    @classmethod
+    def feature_to_note_dur(cls, feat):
+        dur = feat[0] * cls._duration_amax
+        dur += cls._duration_mean
+
+        vec = feat[1:]
+        vec[0] *= cls._logpitch_amax
+        vec[0] += cls._logpitch_mean
+
+        return dur, transform.vec_to_note(vec, cls._note_offset, cls._note_total)
+        

@@ -35,6 +35,7 @@ if __name__ == "__main__":
                         help='Also output inferences as midi file')
     parser.add_argument('--vmidi', required=False, action='store_true',
                         help='Visualize Midi')
+    parser.add_argument('--tsp', action='store_true', required=False)
     args = parser.parse_args()
 
     voices = args.voices or [args.voice]
@@ -78,7 +79,10 @@ if __name__ == "__main__":
             features, window_size=args.window_size
         )
         print("features shape: %s" % str(X.shape))
-        Y = TeacherGenerator.construct_teacher(notes, durations, indices)
+        if args.tsp:
+            Y = features[1:]
+        else:
+            Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
         # Train a ridge regression model
         alphas = [.1, .25, .5, .75, 1, 1.25, 1.5]

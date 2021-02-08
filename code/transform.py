@@ -23,6 +23,7 @@ def note_to_vector(x, offset, total):
 
         note = (x-BASE_KEY) % 12
 
+                    # CHROMA[note] - 1 is toch gwn note? ja
         chroma_rad = (CHROMA[note] - 1) * (math.pi/6)  # 2pi / 12
         c5_rad = (C5[note] - 1) * (math.pi/6)
 
@@ -42,6 +43,31 @@ def note_to_vector(x, offset, total):
 
         return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
 
+def vector_to_note(vec, offset, total):
+    # volgens wolfram zijn er twee oplossingen voor chroma_y:
+    # x = 2(6n+5) waarbij n een integer
+    # x = 2(6n+1) waarbij n een integer
+    
+    if np.all(vec==0):
+        return 0
+    else:
+        min_note = offset
+        max_note = offset + total - 1
+
+        pitch = vec[0]
+        chroma_x = vec[1]
+        chroma_y = vec[2]
+        c5_x = vec[3]
+        c5_y = vec[4]
+
+        chroma_idx = (math.asin(chroma_x) / CHROMA_R) / (math.pi/6) 
+        cyi = (math.acos(chroma_y) / CHROMA_R) / (math.pi/6)
+        c5_idx = (math.asin(c5_x) / C5_R ) / (math.pi/6)
+        c5yi = (math.acos(c5_y) / C5_R) / (math.pi/6)
+
+
+
+        print(chroma_idx, cyi, c5_idx, c5yi)
 
 def encode_note_duration(F, voice=0):
     single = F[..., voice]

@@ -128,3 +128,9 @@ class TeacherGenerator:
         return (int(note), int(dur))  # int(math.ceil(sample_dur)))
 
 
+    @classmethod
+    def feature_to_note_dur(cls, feat):
+        note = 0
+        dur = 0
+
+        return (int(note), int(dur))

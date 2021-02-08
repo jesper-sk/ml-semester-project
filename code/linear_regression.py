@@ -46,6 +46,10 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
+def custom_scorer_tsp(Y_true, Y_pred, **kwargs):
+    return -np.sqrt(np.sum(np.square(Y_true-Y_pred)))
+
+
 def make_inferences(lr, x, dur_predict, sampler):
     backtrack = 0
     max_backtrack = 1000
@@ -94,6 +98,20 @@ def make_inferences(lr, x, dur_predict, sampler):
     # for inf in inferences:
     #     out = np.append(out, np.repeat(inf.note, inf.duration))
     return inferences
+
+
+def make_inferences_tsp(lr, x, dur_predict, sampler):
+    inferences = []
+    while get_inferenced_time(inferences) < dur_predict:
+        x_next = lr.predict(x)
+        inf = Inference(TeacherGenerator.feature_to_note_dur(x_next))
+        inferences.append(inf)
+        x = np.hstack((
+            x[6:, ...],
+            FeatureGenerator.construct_single_feature(
+                inf.note, inf.duration
+        )))
+
 
 
 def get_inferenced_time(inferences):
