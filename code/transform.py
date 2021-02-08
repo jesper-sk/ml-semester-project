@@ -65,8 +65,6 @@ def vector_to_note(vec, offset, total):
         c5_idx = (math.asin(c5_x) / C5_R ) / (math.pi/6)
         c5yi = (math.acos(c5_y) / C5_R) / (math.pi/6)
 
-
-
         print(chroma_idx, cyi, c5_idx, c5yi)
 
 def encode_note_duration(F, voice=0):
