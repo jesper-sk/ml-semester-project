@@ -20,11 +20,3 @@ def visualize_notes(notes, original=None):
         ax.scatter(np.arange(notes.shape[0]), notes)
     plt.show()
 
-# from mido import Message, MidiFile, MidiTrack
-# def convert_to_midi(notes):
-#     outfile = MidiFile(type=0)
-#     track = MidiTrack()
-#     outfile.tracks.append(track)
-
-#     track.append(Message('program_change', program=12, time=0))
-#     track.append(Message('note_on', ))
