@@ -5,8 +5,8 @@ import numpy as np
 
 def visualize_notes(notes, original=None):
     plt.rcParams.update({'font.size': 20})
-    matplotlib.rc('xtick', labelsize=14) 
-    matplotlib.rc('ytick', labelsize=14) 
+    matplotlib.rc('xtick', labelsize=14)
+    matplotlib.rc('ytick', labelsize=14)
 
     if original is not None:
         _, ax = plt.subplots()
@@ -27,4 +27,3 @@ def visualize_notes(notes, original=None):
         _, ax = plt.subplots()
         ax.scatter(np.arange(notes.shape[0]), notes)
     plt.show()
-
