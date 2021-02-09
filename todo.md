@@ -14,14 +14,14 @@
   - sampler
   - eventueel Bayes priors / bias'
   - ~~resultaten op overzichtelijke manier laten zien/opslaan~~
-- visualisation.py verbeteren (onbepaald)
-- backtrack eruit L
+- ~~visualisation.py verbeteren (onbepaald)~~
+- ~~backtrack eruit L~~
 - ~~main.py argparse even netjes maken J~~
   - ~~rotzooi commands eruit~~
   - ~~invoer range alpha, window en sampler toevoegen~~
   - ~~wellicht nuttige commands erbij~~
   - ~~overal help toevoegen~~
-- licxense file toevoegen (whoever comes first)
+- ~~licxense file toevoegen (whoever comes first)~~
 - docstrings en/of comments
 
 Optioneel

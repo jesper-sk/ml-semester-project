@@ -21,7 +21,7 @@ if __name__ == "__main__":
         help='what voices to train on and generate for'
     )
     parser.add_argument(
-        '-d', '--duration', type=int, required=False, default=400, 
+        '-d', '--duration', type=int, required=False, default=400,
         help='amount of samples to predict'
     )
     parser.add_argument(
@@ -50,8 +50,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '-s', '--sampler', type=str, nargs='+',
-        help='the sampler(s) to use during inferencing, selecting multiple '\
-            'results in multiple output files per iteration'
+        help='the sampler(s) to use during inferencing, selecting multiple '
+             'results in multiple output files per iteration'
     )
     parser.add_argument(
         '-P', '--plot', required=False, action="store_true",
@@ -78,19 +78,20 @@ if __name__ == "__main__":
     out_file = args.file
 
     sampler_entries = {
-        'linear':TeacherGenerator.sample_linear,
-        'softmax':TeacherGenerator.sample_softmax,
-        'argmax':TeacherGenerator.take_argmax
+        'linear': TeacherGenerator.sample_linear,
+        'softmax': TeacherGenerator.sample_softmax,
+        'argmax': TeacherGenerator.take_argmax
     }
     samplers = args.sampler or ['linear']
 
     alpha_base = args.alphas or []
     alphas = np.arange(*args.alpharange).tolist() + alpha_base if \
-        args.alpharange else args.alphas or [0, .1, .25, .5, .8, 1, 1.5] # Maybe single, most optimal alpha as default?
+        args.alpharange else args.alphas or [0, .1, .25, .5, .8, 1, 1.5]
+    # Maybe single, most optimal alpha as default?
 
     window_base = args.windows or []
     windows = np.arange(*args.windowrange).tolist() + window_base if \
-        args.windowrange else args.windows or [42] # Idem dito
+        args.windowrange else args.windows or [42]  # Idem dito
 
     print('\ntraining models for voices:', voices)
     print('with samplers:', samplers)
@@ -107,16 +108,16 @@ if __name__ == "__main__":
 
     print('\nsaving to folder:', dir)
 
-    out = {sampler : None for sampler in samplers}
-    all_voice_inferences = {sampler : [] for sampler in samplers}
+    out = {sampler: None for sampler in samplers}
+    all_voice_inferences = {sampler: [] for sampler in samplers}
 
     log = np.array(
         ['voice', 'experiment', 'alpha', 'window size', 'mean score']
-    ).reshape(1,-1)
+    ).reshape(1, -1)
 
     for voice in voices:
         print('\n-------- VOICE %s --------' % voice)
-        
+
         # Transform data to input and teacher matrices
         notes, durations = transform.encode_duration(raw_input, voice)
         features = FeatureGenerator.construct_features(notes, durations)
@@ -124,15 +125,14 @@ if __name__ == "__main__":
         # X, indices = transform.windowed(features, window_size=windows[0])
         # Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
-        # Train a ridge regression model    
-        #lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
+        # Train a ridge regression model
+        # lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
         X, _, lr, nlog = obtain_optimal_model(
             features, notes, durations, alphas, windows, log, voice)
 
         log = nlog
 
         for sampler in samplers:
-
             inferences = make_inferences(
                 lr, X[-1, ...], dur_predict, sampler_entries[sampler]
             )
@@ -141,25 +141,27 @@ if __name__ == "__main__":
 
             # Add current voice inference to total
             if out[sampler] is None:
-                out[sampler] = np.array(samples).reshape(1,-1).T
+                out[sampler] = np.array(samples).reshape(1, -1).T
             else:
                 out[sampler] = np.hstack(
-                    (out[sampler], np.array(samples).reshape(1,-1).T)
+                    (out[sampler], np.array(samples).reshape(1, -1).T)
                 )
 
-            with open('%s/inferences_%s_voice%s.csv' % \
-                        (dir, sampler, voice), 'w') as file:
+            with open('%s/inferences_%s_voice%s.csv' %
+                      (dir, sampler, voice), 'w') as file:
                 file.write(
                     '\n'.join(
-                        ['%s,%s' % (inf.note, inf.duration) for inf in inferences]
+                        ['%s,%s' % (inf.note, inf.duration)
+                         for inf in inferences]
                     )
                 )
 
             if not args.noaudio:
                 write(
-                    '%s/%s_%s_voice%s.wav' % (dir, out_file, sampler, voice), 
-                    rate=audio.SAMPLE_RATE, 
-                    data=audio.get_audio_vector(np.array(samples).reshape(1,-1).T)
+                    '%s/%s_%s_voice%s.wav' % (dir, out_file, sampler, voice),
+                    rate=audio.SAMPLE_RATE,
+                    data=audio.get_audio_vector(
+                        np.array(samples).reshape(1, -1).T)
                 )
 
             if args.plot:
@@ -172,7 +174,7 @@ if __name__ == "__main__":
         for sampler in samplers:
             audio_out = audio.get_audio_vector(out[sampler], voices=voices)
             write(
-                "%s/%s_%s.wav" % (dir, out_file, sampler), data=audio_out, 
+                "%s/%s_%s.wav" % (dir, out_file, sampler), data=audio_out,
                 rate=audio.SAMPLE_RATE
             )
 
