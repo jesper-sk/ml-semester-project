@@ -66,11 +66,12 @@ def save_inferences_to_midi(inferences, filename='Contrapunctus_XIV.mid'):
         track.append(Message('program_change', program=1))
 
         for inf in inferences[voice]:
-            t = int(second2tick(inf.duration / 20, outfile.ticks_per_beat, temp))
-            track.append(Message('note_on', velocity=45, note=inf.note, 
-                                 time=t))
-            track.append(Message('note_off', velocity=50, note=inf.note, 
-                                 time=t))
+            t = int(second2tick(inf.duration / 20.0, outfile.ticks_per_beat,
+                                temp))
+            track.append(Message('note_on', velocity=64, note=inf.note,
+                                 time=t if inf.note == 0 else 0))
+            track.append(Message('note_off', velocity=64, note=inf.note,
+                                 time=0 if inf.note == 0 else t))
 
     outfile.save(filename)
     print('MidiFile saved...')
