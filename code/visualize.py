@@ -13,7 +13,7 @@ def visualize_notes(notes, original=None):
         plt.subplots_adjust(left=.05, right=.95)
         ax.scatter(
             np.arange(original.shape[0]), original,
-            c='orange', s=10)
+            c='red', s=10)
         ax.scatter(
             np.arange(original.shape[0], original.shape[0]+notes.shape[0]),
             notes, c='green', s=10)
