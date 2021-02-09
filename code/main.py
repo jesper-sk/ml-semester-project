@@ -114,25 +114,5 @@ if __name__ == "__main__":
         midi_file = save_inferences_to_midi(all_voice_inferences,
                                             '%s.mid' % out_file)
 
-
-    # Concatenate inferences to original data
-    # (assume voice is 0-indexed by the user)
-    # raw_out = np.array(inferences).reshape(1, -1).T
-    # raw_out = np.append(np.array(raw_input[..., voice]),
-    #                     np.array(inferences))
-    # print(raw_input[-400:, voice].shape)
-    # print(np.array(inferences).shape)
-    # raw_out = np.hstack((raw_input[-400:, voice], np.array(inferences)))\
-    #     .reshape(1, -1)
-    # print(raw_out.shape)
-
-    # Convert predicted notes into a wave file
-    # audio_out = get_audio_vector(np.array(inferences).reshape(1, -1).T)
-    # write(out_file, data=audio_out, rate=10000)
-
-    # write('combined.wav', data=get_audio_vector(raw_out.T, [voice]),
-    #       rate=10000)
-    # 
-
     # Enjoy some eargasming Bach!
     print("=== DONE ===")
