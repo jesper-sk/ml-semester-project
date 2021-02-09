@@ -15,31 +15,66 @@ from visualize import visualize_notes
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--voice', type=int, default=0)
-    parser.add_argument('-V', '--voices', type=int, nargs='+', default=None)
-    parser.add_argument('-d', '--duration', type=int, required=False,
-                        default=400, help='How many samples to predict')
-    parser.add_argument('-o', '--out', type=str, required=False,
-                        default='Contrapunctus_XIV',
-                        help='output desination')
-    parser.add_argument('-a', '--alpha', type=float, nargs='+')
-    parser.add_argument('-A', '--alpharange', type=float, nargs=3)
-    parser.add_argument('-w', '--window', type=int, nargs='+')
-    parser.add_argument('-W', '--windowrange', type=int, nargs=3)
-    parser.add_argument('-s', '--sampler', type=str, nargs='+')
-    parser.add_argument('-p', '--plot', required=False, action="store_true")
-    parser.add_argument('-O', '--offset', type=int, default=0, required=False)
-    parser.add_argument('-m', '--midi', required=False, action='store_true',
-                        help='Also output inferences as midi file')
-    parser.add_argument('--vmidi', required=False, action='store_true',
-                        help='Visualize Midi')
-    parser.add_argument('--noaudio', required=False, action='store_true')
+    parser.add_argument(
+        '-v', '--voice', type=int, default=0, 
+        help='what voice to train on and generate for'
+        )
+    parser.add_argument(
+        '-V', '--voices', type=int, nargs='+', default=None,
+        help='which voices (multiple) to train on and generate for'
+        )
+    parser.add_argument(
+        '-d', '--duration', type=int, required=False, default=400, 
+        help='amount of samples to predict'
+        )
+    parser.add_argument(
+        '-f', '--file', type=str, required=False, default='Contrapunctus_XIV',
+        help='output file name'
+        )
+    parser.add_argument(
+        '-a', '--alphas', type=float, nargs='+',
+        help='the alpha values that will be evaluated during cross-validation'
+        )
+    parser.add_argument(
+        '-A', '--alpharange', type=float, nargs=3,
+        help='the range (from to increment) of alphas to evaluate'
+        )
+    parser.add_argument(
+        '-w', '--windows', type=int, nargs='+',
+        help='the window sizes that will be evaluated during cross-validation'
+        )
+    parser.add_argument(
+        '-W', '--windowrange', type=int, nargs=3,
+        help='the range (from to increment) of window sizes to evaluate'
+        )
+    parser.add_argument(
+        '-s', '--sampler', type=str, nargs='+',
+        help='the sampler(s) to use during inferencing, selecting multiple '\
+            'results in multiple output files per iteration'
+        )
+    parser.add_argument(
+        '-p', '--plot', required=False, action="store_true",
+        help='whether to show a plot'
+        )
+    parser.add_argument(
+        '-O', '--offset', type=int, default=0, required=False
+        )
+    parser.add_argument(
+        '-m', '--midi', required=False, action='store_true',
+        help='Also output inferences as midi file'
+        )
+    parser.add_argument(
+        '--vmidi', required=False, action='store_true',
+        help='Visualize Midi'
+        )
+    parser.add_argument(
+        '--noaudio', required=False, action='store_true'
+        )
     args = parser.parse_args()
 
     voices = args.voices or [args.voice]
-    alphas = args.alphas or [.1, .25, .5, .75, 1, 1.25, 1.5]
     dur_predict = args.duration
-    out_file = args.out
+    out_file = args.file
 
     sampler_entries = {
         'linear':TeacherGenerator.sample_linear,
@@ -50,14 +85,16 @@ if __name__ == "__main__":
         sampler_entries[sampler] for sampler in args.sampler or ['linear']
     ]
 
-    alphas = np.arange(*args.alpharange) if args.alpharange else \
-            args.alpha or [0, .1, .25, .5, .8, 1, 1.5] # Maybe single, most optimal alpha as default?
+    alpha_base = args.alphas or []
+    alphas = np.arange(*args.alpharange).tolist() + alpha_base if \
+        args.alpharange else args.alphas or [0, .1, .25, .5, .8, 1, 1.5] # Maybe single, most optimal alpha as default?
 
-    windows = np.arang(*args.windowrange) if args.windowrange else \
-            args.window or [42] # Idem dito
+    window_base = args.windows or []
+    windows = np.arange(*args.windowrange).tolist() + window_base if \
+        args.windowrange else args.windows or [42] # Idem dito
 
     print('\ntraining models for voices:', voices)
-    print('with samplers:', args.sampler)
+    print('with samplers:', args.sampler or ['linear'])
     print('and alphas:', alphas)
     print('and window sizes:', windows)
 
@@ -73,13 +110,14 @@ if __name__ == "__main__":
         # Transform data to input and teacher matrices
         notes, durations = transform.encode_duration(raw_input, voice)
         features = FeatureGenerator.construct_features(notes, durations)
-        X, indices = transform.windowed(features, window_size=windows[0])
-        Y = TeacherGenerator.construct_teacher(notes, durations, indices)
-        print("features shape:", X.shape)
-        print("teacher shape:", Y.shape)
+
+        # X, indices = transform.windowed(features, window_size=windows[0])
+        # Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
         # Train a ridge regression model    
-        lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
+        #lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
+        X, _, lr = obtain_optimal_model(
+            features, notes, durations, alphas, windows)
         inferences = make_inferences(lr, X[-1, ...], dur_predict, samplers[0])
         samples = audio.inferences_to_samples(inferences, dur_predict)
         all_voice_inferences.append(inferences)
@@ -87,7 +125,6 @@ if __name__ == "__main__":
         # Add current voice inference to total
         if out is None:
             out = np.array(samples).reshape(1,-1).T
-            print(out.shape)
         else:
             out = np.hstack((out, np.array(samples).reshape(1,-1).T))
 
@@ -109,4 +146,4 @@ if __name__ == "__main__":
                                                  '%s.mid' % out_file)
 
     # Enjoy some eargasming Bach!
-    print('\n-------- DONE --------\n')
+    print('\n---------- DONE ---------\n')
