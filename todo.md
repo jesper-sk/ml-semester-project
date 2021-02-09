@@ -1,6 +1,6 @@
 # TODO
 *code*:
-- midi fixen L
+- ~~midi fixen L~~
 - alle rotzooi eruit J&L  
   Voornamelijk:
   - ~~linear_regression.py~~
