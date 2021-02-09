@@ -15,11 +15,11 @@ class Inference:
         self.note, self.duration = values
 
 def obtain_optimal_model(
-    features, notes, durations, alphas, windows, normalize=False):
+    features, notes, durations, alphas, windows, log, voice, normalize=False):
     best_a = None
     best_w = None
     best_mean_score = -np.inf
-    for (a, w) in product(alphas, windows):
+    for (i, (a, w)) in enumerate(product(alphas, windows)):
         print('alpha=%s\twindow=%s' % (a, w), end='')
         X, indices = transform.windowed(features, window_size=w)
         Y = TeacherGenerator.construct_teacher(notes, durations, indices)
@@ -30,6 +30,14 @@ def obtain_optimal_model(
             scoring=make_scorer(custom_scorer, greater_is_better=True)
         )
         print('\tmean_score=%s' % scores.mean())
+        log = np.append(
+            log, 
+            np.array(
+                [str(voice), str(i), str(a), str(w), str(scores.mean())]
+            ).reshape(1,-1), 
+            axis=0
+        )
+
         if scores.mean() > best_mean_score:
             best_a, best_w = a, w
             best_mean_score = scores.mean()
@@ -42,7 +50,7 @@ def obtain_optimal_model(
     X, indices = transform.windowed(features, window_size=best_w)
     Y = TeacherGenerator.construct_teacher(notes, durations, indices)
     out_lr.fit(X[:-1, ...], Y)
-    return X, indices, out_lr
+    return X, indices, out_lr, log
 
 def obtain_optimal_model_old(X, Y, alphas, normalize=False):
     best_alpha = None
@@ -77,18 +85,18 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
-def make_inferences(lr, x, dur_predict, sampler):
+def make_inferences(lr, X, dur_predict, sampler):
     inferences = []
     while get_inferenced_time(inferences) < dur_predict:
-        Y = lr.predict(x.reshape(1, -1))
+        Y = lr.predict(X.reshape(1, -1))
         inference = Inference(
             TeacherGenerator.y_to_note_dur(
                 Y.squeeze(), sampler=sampler
             )
         )
         inferences.append(inference)
-        x = np.hstack((
-            x[6:, ...],
+        X = np.hstack((
+            X[6:, ...],
             FeatureGenerator.construct_single_feature(
                     inference.note, inference.duration
             )
