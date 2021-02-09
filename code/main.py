@@ -18,6 +18,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--voice', type=int, default=0)
     parser.add_argument('--voices', type=int, nargs='+', default=None)
+    parser.add_argument('--alphas', type=float, nargs='+', default=None)
     parser.add_argument('-d', '--duration', type=int, required=False,
                         default=400, help='How many samples to predict')
     parser.add_argument('--audio', type=bool, required=False, default=True)
@@ -38,6 +39,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     voices = args.voices or [args.voice]
+    alphas = args.alphas or [.1, .25, .5, .75, 1, 1.25, 1.5]
     dur_predict = args.duration
     out_file = args.out
 
@@ -83,7 +85,6 @@ if __name__ == "__main__":
             Y = TeacherGenerator.construct_teacher(notes, durations, indices)
 
         # Train a ridge regression model
-        alphas = [.1, .25, .5, .75, 1, 1.25, 1.5]
         lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
         inferences = make_inferences(
             lr, X[-1, ...], dur_predict, sampler)
