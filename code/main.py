@@ -12,7 +12,6 @@ from linear_regression import obtain_optimal_model, make_inferences
 from audio import get_audio_vector, save_inferences_to_midi,\
                   inferences_to_samples
 from visualize import visualize_notes
-from roll import visualize_midi
 
 
 if __name__ == "__main__":
@@ -114,8 +113,6 @@ if __name__ == "__main__":
     if args.midi or args.vmidi:
         midi_file = save_inferences_to_midi(all_voice_inferences,
                                             '%s.mid' % out_file)
-        if args.vmidi:
-            visualize_midi(midi_file)
 
 
     # Concatenate inferences to original data
