@@ -27,7 +27,7 @@ def obtain_optimal_model(
         lr = Ridge(alpha=a, normalize=normalize)
         scores = cross_val_score(
             lr, X[:-1, ...], Y, cv=X.shape[0]-1,
-            scoring=make_scorer(custom_scorer, greater_is_better=True)
+            scoring=make_scorer(custom_scorer, greater_is_better=False)
         )
         print('\tmean_score=%s' % scores.mean())
         log = np.append(
@@ -60,7 +60,7 @@ def obtain_optimal_model_old(X, Y, alphas, normalize=False):
         lr = Ridge(alpha=a, normalize=normalize)
         scores = cross_val_score(
             lr, X, Y, cv=X.shape[0],
-            scoring=make_scorer(custom_scorer, greater_is_better=True)
+            scoring=make_scorer(custom_scorer, greater_is_better=False)
         )
         print('alpha:', a, 'mean:', scores.mean())
         if scores.mean() > best_mean_score:
@@ -82,7 +82,7 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     feat_true = FeatureGenerator.construct_single_feature(note_true, dur_true)
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
     
-    return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
+    return np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
 def make_inferences(lr, X, dur_predict, sampler):

@@ -1,6 +1,4 @@
 # Music-specific
-*.wav
-*.mid
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
