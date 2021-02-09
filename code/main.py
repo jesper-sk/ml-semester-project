@@ -65,10 +65,6 @@ if __name__ == "__main__":
         help='Also output inferences as midi file'
     )
     parser.add_argument(
-        '--vmidi', required=False, action='store_true',
-        help='Visualize Midi'
-    )
-    parser.add_argument(
         '--noaudio', required=False, action='store_true'
     )
     args = parser.parse_args()
@@ -176,7 +172,7 @@ if __name__ == "__main__":
                 rate=audio.SAMPLE_RATE
             )
 
-    if args.midi or args.vmidi:
+    if args.midi:
         for sampler in samplers:
             midi_file = audio.save_inferences_to_midi(
                 all_voice_inferences, '%s/%s_%s.mid' % (dir, sampler, out_file)
