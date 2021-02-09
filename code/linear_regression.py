@@ -23,7 +23,6 @@ def obtain_optimal_model(X, Y, alphas, normalize=False):
             scoring=make_scorer(custom_scorer, greater_is_better=True)
         )
         print('alpha:', a, 'mean:', scores.mean())
-        # print('scores:', scores)
         if scores.mean() > best_mean_score:
             best_alpha = a
             best_mean_score = scores.mean()
@@ -46,15 +45,8 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     return -np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
-def custom_scorer_tsp(Y_true, Y_pred, **kwargs):
-    return -np.sqrt(np.sum(np.square(Y_true-Y_pred)))
-
-
 def make_inferences(lr, x, dur_predict, sampler):
-    backtrack = 0
-    max_backtrack = 1000
     inferences = []
-    last_x = x
     while get_inferenced_time(inferences) < dur_predict:
         Y = lr.predict(x.reshape(1, -1))
         inference = Inference(
@@ -62,56 +54,18 @@ def make_inferences(lr, x, dur_predict, sampler):
                 Y.squeeze(), sampler=sampler
             )
         )
-
-        if inference.duration < 1 and inferences and backtrack < max_backtrack:
-            # Just to make sure that backtrack doesn't happen anymore.
-            # Don't think it will ever, so might as well get rid of it 
-            # some time. 
-            assert False
-            backtrack += 1
-            Y = lr.predict(last_x.reshape(1, -1))
-            inf = Inference(TeacherGenerator.y_to_note_dur(
-                Y.squeeze()
-            ))
-            x[-6:, ...] = FeatureGenerator.construct_single_feature(
-                inf.note, inf.duration
-            )
-            inferences = inferences[:-1]
-        else:
-            inference.duration = max(inference.duration, 1)
-            inferences.append(inference)
-            last_x = x
-            x = np.hstack((
-                x[6:, ...],
-                FeatureGenerator.construct_single_feature(
+        inferences.append(inference)
+        x = np.hstack((
+            x[6:, ...],
+            FeatureGenerator.construct_single_feature(
                     inference.note, inference.duration
-                )
-            ))
-            assert last_x is not x
-        # inf_time = get_inferenced_time(inferences)
-        # progress = ['=' for i in range(int(inf_time/dur_predict*100-1))]
-        # print('{0:0=3d}'.format(inf_time),
-        #       ''.join(progress) + '>'
-        #       + ''.join([' ' for i in range(100-len(progress))]) + '|')
+            )
+        ))
 
     # out = np.array([])
     # for inf in inferences:
     #     out = np.append(out, np.repeat(inf.note, inf.duration))
     return inferences
-
-
-def make_inferences_tsp(lr, x, dur_predict, sampler):
-    inferences = []
-    while get_inferenced_time(inferences) < dur_predict:
-        x_next = lr.predict(x)
-        inf = Inference(TeacherGenerator.feature_to_note_dur(x_next))
-        inferences.append(inf)
-        x = np.hstack((
-            x[6:, ...],
-            FeatureGenerator.construct_single_feature(
-                inf.note, inf.duration
-        )))
-
 
 
 def get_inferenced_time(inferences):

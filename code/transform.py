@@ -18,54 +18,35 @@ def note_to_vector(x, offset, total):
     elif x == 0:
         return np.repeat(0., 5)
     else:
-        min_note = offset
-        max_note = offset + total - 1
-
-        note = (x-BASE_KEY) % 12
-
-                    # CHROMA[note] - 1 is toch gwn note? ja
-        chroma_rad = (CHROMA[note] - 1) * (math.pi/6)  # 2pi / 12
-        c5_rad = (C5[note] - 1) * (math.pi/6)
-
-        chroma_x = CHROMA_R * math.sin(chroma_rad)
-        chroma_y = CHROMA_R * math.cos(chroma_rad)
-
-        c5_x = C5_R * math.sin(c5_rad)
-        c5_y = C5_R * math.cos(c5_rad)
-
-        n = x - BASE_KEY
-        freq = 2**(n/12) * BASE_FREQ
-
-        min_p = 2 * math.log2(2**((min_note - BASE_KEY)/12) * BASE_FREQ)
-        max_p = 2 * math.log2(2**((max_note - BASE_KEY)/12) * BASE_FREQ)
-
-        pitch = 2 * math.log2(freq) - max_p + ((max_p - min_p)/2)
+        chroma_x, chroma_y = note_to_chroma_xy(x)
+        c5_x, c5_y = note_to_c5_xy(x)
+        pitch, octave = note_to_log_pitch(x, offset, total)
 
         return np.array([pitch, chroma_x, chroma_y, c5_x, c5_y])
 
-def vector_to_note(vec, offset, total):
-    # volgens wolfram zijn er twee oplossingen voor chroma_y:
-    # x = 2(6n+5) waarbij n een integer
-    # x = 2(6n+1) waarbij n een integer
-    
-    if np.all(vec==0):
-        return 0
-    else:
-        min_note = offset
-        max_note = offset + total - 1
 
-        pitch = vec[0]
-        chroma_x = vec[1]
-        chroma_y = vec[2]
-        c5_x = vec[3]
-        c5_y = vec[4]
+def note_to_chroma_xy(note):
+    n = (note-BASE_KEY) % 12
+    chroma_rad = n * (math.pi/6)
+    x = CHROMA_R * math.sin(chroma_rad)
+    y = CHROMA_R * math.cos(chroma_rad)
+    return (x, y)
 
-        chroma_idx = (math.asin(chroma_x) / CHROMA_R) / (math.pi/6) 
-        cyi = (math.acos(chroma_y) / CHROMA_R) / (math.pi/6)
-        c5_idx = (math.asin(c5_x) / C5_R ) / (math.pi/6)
-        c5yi = (math.acos(c5_y) / C5_R) / (math.pi/6)
 
-        print(chroma_idx, cyi, c5_idx, c5yi)
+def note_to_c5_xy(note):
+    n = (note-BASE_KEY) % 12
+    c5_rad = (C5[n] - 1) * (math.pi/6)
+    x = C5_R * math.sin(c5_rad)
+    y = C5_R * math.cos(c5_rad)
+
+
+def note_to_log_pitch(note, offset, total):
+    min_p = 2 * math.log2(2**((offset - BASE_KEY)/12) * BASE_FREQ)
+    max_p = 2 * math.log2(2**((offset + total - 1 - BASE_KEY)/12) * BASE_FREQ)
+    pitch = 2 * math.log2((2**((note - BASE_KEY)/12) * BASE_FREQ)) - max_p\
+        + ((max_p - min_p)/2)
+    return pitch
+
 
 def encode_note_duration(F, voice=0):
     single = F[..., voice]

@@ -72,7 +72,6 @@ if __name__ == "__main__":
     out = None
     all_voice_inferences = []
     for voice in voices:
-
         notes, durations = transform.encode_duration(raw_input, voice)
         features = FeatureGenerator.construct_features(notes, durations)
         X, indices = transform.windowed(

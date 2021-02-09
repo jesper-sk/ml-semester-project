@@ -38,8 +38,7 @@ class FeatureGenerator:
 
         vecs = np.array(
             [note_to_vector(note, cls._note_offset, cls._note_total)
-             for note in notes]
-        )
+             for note in notes])
 
         cls._duration_mean = durations.mean()
         cls._duration_amax = np.abs(durations).max()
@@ -69,6 +68,7 @@ class FeatureGenerator:
         #     vecs[...,1] = np.zeros(len(vecs[...,1]))
         # else:
         #     vecs[...,1] /= cls._logpitch_amax
+
     @classmethod
     def construct_chord_features(cls, chords, durations):
         cls._note_offset = np.min(chords[chords != 0])
