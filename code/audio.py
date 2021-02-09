@@ -9,30 +9,38 @@ BASE_FREQ = 440  # Hz
 SAMPLE_RATE = 10000  # Samples per second
 SYMBOL_DURATION = 1/20  # Seconds per symbol
 TICKS_PER_SYMBOL = math.floor(SAMPLE_RATE * SYMBOL_DURATION)
-BASE_KEY = 54  # int(np.average(vec[np.nonzero(vec)]))
+BASE_KEY = 54  # Average non-zero symbol, keep music centered around 
+               # base frequency
 
 
-def process_voice(voice):
-    out = np.zeros(voice.shape[0] * TICKS_PER_SYMBOL)
+def process_voice(voice, **kwargs):
+    bf = kwargs.get('base_frequency') or BASE_FREQ
+    bk = kwargs.get('base_key') or BASE_KEY
+    dur = kwargs.get('symbol_duration') or SYMBOL_DURATION
+    rate = kwargs.get('sample_rate') or SAMPLE_RATE
+    tps = math.floor(rate * dur)
+    assert tps > 0
+
+    out = np.zeros(voice.shape[0] * tps)
     curr_symbol = voice[0]
     start_idx = 0
     for i in range(voice.shape[0]):
         if voice[i] != curr_symbol:
             stop_idx = i-1
-            tone_length = (stop_idx-start_idx) * TICKS_PER_SYMBOL
+            tone_length = (stop_idx-start_idx) * tps
             freq = 0 if curr_symbol == 0 else \
-                BASE_FREQ * 2**((curr_symbol-BASE_KEY) / 12)
-            out[start_idx*TICKS_PER_SYMBOL:stop_idx*TICKS_PER_SYMBOL] =\
-                [math.sin(2 * math.pi * freq * (t+1) / SAMPLE_RATE) for
+                bf * 2**((curr_symbol-bk) / 12)
+            out[start_idx*tps:stop_idx*tps] =\
+                [math.sin(2 * math.pi * freq * (t+1) / rate) for
                  t in range(tone_length)]
             curr_symbol = voice[i]
             start_idx = i
     return out
 
 
-def get_audio_vector(vec, voices=[0]):
+def get_audio_vector(vec, voices=[0], **kwargs):
     samples_voice = \
-        np.array([process_voice(vec[:, voice]) for voice in
+        np.array([process_voice(vec[:, voice], **kwargs) for voice in
                   voices or range(vec.shape[1])])
     samples = np.sum(samples_voice, axis=0) / samples_voice.shape[0]
     m = np.max(np.abs(samples))

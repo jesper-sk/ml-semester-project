@@ -4,20 +4,25 @@
 - alle rotzooi eruit J&L  
   Voornamelijk:
   - linear_regression.py
-  - main.py
-  - transform.py
+  - ~~main.py~~
+  - ~~transform.py~~
+  - ~~rest van de files~~
 - systematic optimisation maken van meerdere hyperparameters: J
+  - ~~Invoer in argparse~~
   - window size
-  - alpha (over aan te geven stepgrootte, min, max?)
-  - sampler?
+  - ~~alphas~~
+  - sampler
   - eventueel Bayes priors / bias'
+  - resultaten op overzichtelijke manier laten zien/opslaan
 - visualisation.py verbeteren (onbepaald)
 - backtrack eruit L
 - main.py argparse even netjes maken J
-  - rotzooi commands eruit
+  - ~~rotzooi commands eruit~~
+  - ~~invoer range alpha, window en sampler toevoegen~~
   - wellicht nuttige commands erbij
   - overal help toevoegen
 - licxense file toevoegen (whoever comes first)
+- docstrings en/of comments
 
 Optioneel
 - input **standaardizeren** ipv normalizeren J
