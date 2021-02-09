@@ -75,3 +75,4 @@ def windowed(X, window_size=10, hop_size=1):
                          for i in indices])
 
     return (X_windows, indices)
+    

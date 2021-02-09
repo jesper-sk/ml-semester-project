@@ -3,6 +3,7 @@
 - midi fixen L
 - alle rotzooi eruit J&L  
   Voornamelijk:
+<<<<<<< HEAD
   - linear_regression.py
   - ~~main.py~~
   - ~~transform.py~~
@@ -23,6 +24,23 @@
   - ~~overal help toevoegen~~
 - licxense file toevoegen (whoever comes first)
 - docstrings en/of comments
+=======
+  - ~~linear_regression.py~~
+  - main.py
+  - transform.py
+- systematic optimisation maken van meerdere hyperparameters: J
+  - window size
+  - alpha (over aan te geven stepgrootte, min, max?)
+  - sampler?
+  - eventueel Bayes priors / bias'
+- ~~visualisation.py verbeteren (onbepaald)~~
+- ~~backtrack eruit L~~
+- main.py argparse even netjes maken J
+  - rotzooi commands eruit
+  - wellicht nuttige commands erbij
+  - overal help toevoegen
+- ~~licxense file toevoegen (whoever comes first)~~
+>>>>>>> 3d58b340d069b2ab1be9555c94addf220e1ce219
 
 Optioneel
 - input **standaardizeren** ipv normalizeren J
