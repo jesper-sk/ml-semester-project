@@ -37,6 +37,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     voices = args.voices or [args.voice]
+    alphas = args.alphas or [.1, .25, .5, .75, 1, 1.25, 1.5]
     dur_predict = args.duration
     out_file = args.out
 
