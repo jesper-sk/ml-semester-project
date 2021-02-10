@@ -82,11 +82,11 @@ if __name__ == "__main__":
 
     alpha_base = args.alphas or []
     alphas = np.arange(*args.alpharange).tolist() + alpha_base if \
-        args.alpharange else args.alphas or [0, .1, .25, .5, .8, 1, 1.5] # Maybe single, most optimal alpha as default?
+        args.alpharange else args.alphas or [1.5] # Maybe single, most optimal alpha as default?
 
     window_base = args.windows or []
     windows = np.arange(*args.windowrange).tolist() + window_base if \
-        args.windowrange else args.windows or [42] # Idem dito
+        args.windowrange else args.windows or [100] # Idem dito
 
     print('\ntraining models for voices:', voices)
     print('with samplers:', samplers)
