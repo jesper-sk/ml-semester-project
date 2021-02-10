@@ -17,7 +17,7 @@ class TeacherGenerator:
 
         cls._min_dur = durations[notes != 0].min()
         cls._max_dur = durations[notes != 0].max()
-      
+
         cls._init = True
 
         Y = np.zeros((len(indices) - 1, note_vec_len + 19))

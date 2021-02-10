@@ -9,8 +9,9 @@ BASE_FREQ = 440  # Hz
 SAMPLE_RATE = 10000  # Samples per second
 SYMBOL_DURATION = 1/20  # Seconds per symbol
 TICKS_PER_SYMBOL = math.floor(SAMPLE_RATE * SYMBOL_DURATION)
-BASE_KEY = 54  # Average non-zero symbol, keep music centered around 
-               # base frequency
+BASE_KEY = 54
+# Average non-zero symbol, keep music centered around
+# base frequency
 
 
 def process_voice(voice, **kwargs):
@@ -57,8 +58,9 @@ def inferences_to_samples(inferences, dur_predict):
 def save_inferences_to_midi(inferences, filename='Contrapunctus_XIV.mid'):
     print('Producing Midi file...')
     outfile = MidiFile()
-    temp = bpm2tempo(96)  # or 76?
+    temp = bpm2tempo(48)  # or 76?
     # print('ticks_per_beat:', outfile.ticks_per_beat)
+    outfile.ticks_per_beat = 2496
     for voice in range(len(inferences)):
         track = MidiTrack()
         outfile.tracks.append(track)
@@ -66,7 +68,7 @@ def save_inferences_to_midi(inferences, filename='Contrapunctus_XIV.mid'):
         track.append(Message('program_change', program=1))
 
         for inf in inferences[voice]:
-            t = int(second2tick(inf.duration / 20.0, outfile.ticks_per_beat,
+            t = int(second2tick(inf.duration / 10.0, outfile.ticks_per_beat,
                                 temp))
             track.append(Message('note_on', velocity=64, note=inf.note,
                                  time=t if inf.note == 0 else 0))

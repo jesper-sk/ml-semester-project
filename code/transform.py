@@ -11,6 +11,7 @@ CHROMA_R = 1
 C5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
 C5_R = 1
 
+
 def note_to_vector(x, offset, total):
     if x == 0:
         return np.repeat(0., 5)
@@ -27,7 +28,7 @@ def note_to_circle_coords(note, circle, radius):
     rad = circle[n] * (math.pi/6)
     x = radius * math.sin(rad)
     y = radius * math.cos(rad)
-    return x,y
+    return x, y
 
 
 def note_to_log_pitch(note, offset, total):
@@ -40,27 +41,23 @@ def note_to_log_pitch(note, offset, total):
 
 def encode_duration(F, voice=None):
     root = F if voice is None else F[..., voice]
-
     prev = root[0]
     dur = 0
-
     durs = []
     items = [root[0]]
 
     for item in root:
-        if np.all(item==prev):
+        if np.all(item == prev):
             dur += 1
         else:
             items.append(item)
             durs.append(dur)
             prev = item
             dur = 1
-    
-    durs.append(dur)
 
+    durs.append(dur)
     durs = np.array(durs)
     items = np.array(items)
-
     return items, durs
 
 
@@ -75,4 +72,3 @@ def windowed(X, window_size=10, hop_size=1):
                          for i in indices])
 
     return (X_windows, indices)
-    

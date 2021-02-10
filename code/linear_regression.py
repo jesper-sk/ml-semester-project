@@ -1,8 +1,7 @@
 import numpy as np
 from itertools import product
-from numpy.core.defchararray import greater
 from sklearn.linear_model import Ridge
-from sklearn.model_selection import cross_val_score, LeaveOneOut
+from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer
 
 from features import FeatureGenerator
@@ -14,8 +13,9 @@ class Inference:
     def __init__(self, values):
         self.note, self.duration = values
 
-def obtain_optimal_model(
-    features, notes, durations, alphas, windows, log, voice, normalize=False):
+
+def obtain_optimal_model(features, notes, durations, alphas, windows, log,
+                         voice, normalize=False):
     best_a = None
     best_w = None
     best_mean_score = -np.inf
@@ -23,7 +23,7 @@ def obtain_optimal_model(
         print('alpha=%s\twindow=%s' % (a, w), end='')
         X, indices = transform.windowed(features, window_size=w)
         Y = TeacherGenerator.construct_teacher(notes, durations, indices)
-        
+
         lr = Ridge(alpha=a, normalize=normalize)
         scores = cross_val_score(
             lr, X[:-1, ...], Y, cv=X.shape[0]-1,
@@ -31,10 +31,10 @@ def obtain_optimal_model(
         )
         print('\tmean_score=%s' % scores.mean())
         log = np.append(
-            log, 
+            log,
             np.array(
                 [str(voice), str(i), str(a), str(w), str(scores.mean())]
-            ).reshape(1,-1), 
+            ).reshape(1, -1),
             axis=0
         )
 
@@ -44,13 +44,15 @@ def obtain_optimal_model(
 
     assert best_a is not None
     print('-------------------------')
-    print('best pair: a=%s, w=%s, score=%s' % (best_a, best_w, best_mean_score))
+    print('best pair: a=%s, w=%s, score=%s' %
+          (best_a, best_w, best_mean_score))
 
     out_lr = Ridge(best_a, normalize=normalize)
     X, indices = transform.windowed(features, window_size=best_w)
     Y = TeacherGenerator.construct_teacher(notes, durations, indices)
     out_lr.fit(X[:-1, ...], Y)
     return X, indices, out_lr, log
+
 
 def obtain_optimal_model_old(X, Y, alphas, normalize=False):
     best_alpha = None
@@ -81,7 +83,6 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
 
     feat_true = FeatureGenerator.construct_single_feature(note_true, dur_true)
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
-    
     return np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 
@@ -101,7 +102,6 @@ def make_inferences(lr, X, dur_predict, sampler):
                     inference.note, inference.duration
             )
         ))
-
     # out = np.array([])
     # for inf in inferences:
     #     out = np.append(out, np.repeat(inf.note, inf.duration))
