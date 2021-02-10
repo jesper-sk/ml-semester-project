@@ -61,6 +61,7 @@ def save_inferences_to_midi(inferences, filename='Contrapunctus_XIV.mid'):
     temp = bpm2tempo(48)  # or 76?
     # print('ticks_per_beat:', outfile.ticks_per_beat)
     outfile.ticks_per_beat = 2496
+
     for voice in range(len(inferences)):
         track = MidiTrack()
         outfile.tracks.append(track)
