@@ -1,0 +1,1 @@
+python main.py -v 3 -w 1 2 3 4 5 10 15 20 25 50 75 100 125 150 200 250 300 -A 1 10.1 0.25 -s linear softmax argmax -m

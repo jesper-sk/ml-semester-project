@@ -1,3 +1,8 @@
+# def warn(*args, **kwargs):
+#     pass
+# import warnings
+# warnings.warn = warn
+
 # imports
 import argparse
 from datetime import datetime

@@ -3,10 +3,14 @@ from itertools import product
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer
+from sklearn.exceptions import FitFailedWarning
 
 from features import FeatureGenerator
 from teacher import TeacherGenerator
 import transform
+
+import warnings
+warnings.filterwarnings("ignore", category=FitFailedWarning)
 
 
 class Inference:
