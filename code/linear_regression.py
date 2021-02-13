@@ -58,27 +58,6 @@ def obtain_optimal_model(features, notes, durations, alphas, windows, log,
     return X, indices, out_lr, log
 
 
-def obtain_optimal_model_old(X, Y, alphas, normalize=False):
-    best_alpha = None
-    best_mean_score = -np.inf
-    for a in alphas:
-        scores = []
-        lr = Ridge(alpha=a, normalize=normalize)
-        scores = cross_val_score(
-            lr, X, Y, cv=X.shape[0],
-            scoring=make_scorer(custom_scorer, greater_is_better=False)
-        )
-        print('alpha:', a, 'mean:', scores.mean())
-        if scores.mean() > best_mean_score:
-            best_alpha = a
-            best_mean_score = scores.mean()
-    assert best_alpha is not None
-    print("Best alpha:", best_alpha, 'Best mean score:', best_mean_score)
-    best_lr = Ridge(best_alpha, normalize=normalize)
-    best_lr.fit(X, Y)
-    return best_lr
-
-
 def custom_scorer(Y_true, Y_pred, **kwargs):
     note_true, dur_true = TeacherGenerator.y_to_note_dur(
         Y_true.squeeze(), sampler=TeacherGenerator.take_argmax)
@@ -89,11 +68,17 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
     return np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
+def inform_output(Y, inferences):
+    last = inferences[-1]
+    last_note_idx = last.note - TeacherGenerator._min_note
+    Y[last_note_idx] = 0
+    assert np.any(Y!=0)
 
 def make_inferences(lr, X, dur_predict, sampler):
     inferences = []
     while get_inferenced_time(inferences) < dur_predict:
-        Y = lr.predict(X.reshape(1, -1))
+        Y = lr.predict(X.reshape(1, -1)).squeeze()
+        inform_output(Y, inferences)
         inference = Inference(
             TeacherGenerator.y_to_note_dur(
                 Y.squeeze(), sampler=sampler

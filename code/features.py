@@ -17,11 +17,11 @@ class FeatureGenerator:
 
         res = feature.copy()
 
-        res[..., 1] -= cls._logpitch_mean
-        if cls._logpitch_amax == 0:
-            res[..., 1] = np.zeros(len(res[..., 1]))
-        else:
-            res[..., 1] /= cls._logpitch_amax
+        # res[..., 1] -= cls._logpitch_mean
+        # if cls._logpitch_amax == 0:
+        #     res[..., 1] = np.zeros(len(res[..., 1]))
+        # else:
+        #     res[..., 1] /= cls._logpitch_amax
 
         res[..., 0] -= cls._duration_mean
         if cls._duration_amax == 0:
