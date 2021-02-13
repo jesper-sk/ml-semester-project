@@ -69,8 +69,11 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     return np.sqrt(np.sum(np.square(feat_true-feat_pred)))
 
 def inform_output(Y, inferences):
+    if len(inferences) == 0:
+        return
     last = inferences[-1]
-    last_note_idx = last.note - TeacherGenerator._min_note
+    last_note_idx = 0 if last.note == 0 else \
+        last.note - TeacherGenerator._min_note
     Y[last_note_idx] = 0
     assert np.any(Y!=0)
 
