@@ -64,6 +64,11 @@ def custom_scorer(Y_true, Y_pred, **kwargs):
     note_pred, dur_pred = TeacherGenerator.y_to_note_dur(
         Y_pred.squeeze(), sampler=TeacherGenerator.take_argmax)
 
+    if note_true == 0 and note_pred!=0: 
+        return 6
+    if note_pred==0 and note_true!=0:
+        return 6
+
     feat_true = FeatureGenerator.construct_single_feature(note_true, dur_true)
     feat_pred = FeatureGenerator.construct_single_feature(note_pred, dur_pred)
     return np.sqrt(np.sum(np.square(feat_true-feat_pred)))
