@@ -25,7 +25,7 @@ def note_to_vector(x, offset, total):
 
 def note_to_circle_coords(note, circle, radius):
     n = (note-BASE_KEY) % 12
-    rad = circle[n] * (math.pi/6)
+    rad = (circle[n]-1) * (math.pi/6)
     x = radius * math.sin(rad)
     y = radius * math.cos(rad)
     return x, y
