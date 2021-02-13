@@ -62,6 +62,8 @@ def encode_duration(F, voice=None):
 
 
 def windowed(X, window_size=10, hop_size=1):
+    if window_size == 1:
+        return (X, np.arange(X.shape[0]))
     hop_size = hop_size or window_size
     offset = X.shape[0] % (window_size - hop_size)
 

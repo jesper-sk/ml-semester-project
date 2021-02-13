@@ -1,3 +1,8 @@
+# def warn(*args, **kwargs):
+#     pass
+# import warnings
+# warnings.warn = warn
+
 # imports
 import argparse
 from datetime import datetime
@@ -177,8 +182,8 @@ if __name__ == "__main__":
     if args.midi:
         for sampler in samplers:
             midi_file = audio.save_inferences_to_midi(
-                all_voice_inferences[sampler],
-                '%s/%s_%s.mid' % (dir, sampler, out_file)
+                all_voice_inferences[sampler], '%s/%s_%s.mid' %
+                (dir, sampler, out_file)
             )
 
     # Enjoy some eargasming Bach!
