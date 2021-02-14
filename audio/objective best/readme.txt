@@ -1,0 +1,1 @@
+The objective best continuation was made from voice 1, with a window size of 25 and an alpha value of 6. Included here are the three audio files, that were made by the free note-duration pair extraction methods. 

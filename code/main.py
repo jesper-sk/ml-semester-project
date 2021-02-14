@@ -109,8 +109,13 @@ if __name__ == "__main__":
 
     print('\nsaving to folder:', dir)
 
-    out = {sampler: None for sampler in samplers}
-    all_voice_inferences = {sampler: [] for sampler in samplers}
+    no_top = min(5, len(alphas) * len(windows))
+    print(no_top)
+
+    out = \
+        {sampler: [None for _ in range(no_top)] for sampler in samplers}
+    all_voice_inferences = \
+        {sampler: [[] for _ in range(no_top)] for sampler in samplers}
 
     log = np.array(
         ['voice', 'experiment', 'alpha', 'window size', 'mean score']
@@ -128,63 +133,71 @@ if __name__ == "__main__":
 
         # Train a ridge regression model
         # lr = obtain_optimal_model(X[:-1, ...], Y, alphas)
-        X, _, lr, nlog = obtain_optimal_model(
+        top, nlog = obtain_optimal_model(
             features, notes, durations, alphas, windows, log, voice)
 
         log = nlog
 
-        for sampler in samplers:
-            inferences = make_inferences(
-                lr, X[-1, ...], dur_predict, sampler_entries[sampler]
-            )
-            samples = audio.inferences_to_samples(inferences, dur_predict)
-            all_voice_inferences[sampler].append(inferences)
-
-            # Add current voice inference to total
-            if out[sampler] is None:
-                out[sampler] = np.array(samples).reshape(1, -1).T
-            else:
-                out[sampler] = np.hstack(
-                    (out[sampler], np.array(samples).reshape(1, -1).T)
+        for (idx,model) in enumerate(top):
+            no = len(top) - idx
+            lr = model[3]
+            X = model[4]
+            #print(no)
+            for sampler in samplers:
+                inferences = make_inferences(
+                    lr, X[-1, ...], dur_predict, sampler_entries[sampler]
                 )
+                samples = audio.inferences_to_samples(inferences, dur_predict)
+                all_voice_inferences[sampler][no-1].append(inferences)
 
-            with open('%s/inferences_%s_voice%s.csv' %
-                      (dir, sampler, voice), 'w') as file:
-                file.write(
-                    '\n'.join(
-                        ['%s,%s' % (inf.note, inf.duration)
-                         for inf in inferences]
+                # Add current voice inference to total
+                if out[sampler][no-1] is None:
+                    out[sampler][no-1] = np.array(samples).reshape(1, -1).T
+                else:
+                    out[sampler][no-1] = np.hstack(
+                        (out[sampler][no-1], np.array(samples).reshape(1, -1).T)
                     )
-                )
 
-            if not args.noaudio:
-                write(
-                    '%s/%s_%s_voice%s.wav' % (dir, out_file, sampler, voice),
-                    rate=audio.SAMPLE_RATE,
-                    data=audio.get_audio_vector(
-                        np.array(samples).reshape(1, -1).T)
-                )
+                with open('%s/inferences_top%s_%s_voice%s.csv' %
+                        (dir, no, sampler, voice), 'w') as file:
+                    file.write(
+                        '\n'.join(
+                            ['%s,%s' % (inf.note, inf.duration)
+                            for inf in inferences]
+                        )
+                    )
 
-            if args.plot:
-                visualize_notes(samples, raw_input[-dur_predict:, voice])
+                if not args.noaudio:
+                    write(
+                        '%s/%s_top%s_%s_voice%s.wav' % 
+                            (dir, out_file, no, sampler, voice),
+                        rate=audio.SAMPLE_RATE,
+                        data=audio.get_audio_vector(
+                            np.array(samples).reshape(1, -1).T)
+                    )
+
+                if args.plot:
+                    visualize_notes(samples, raw_input[-dur_predict:, voice])
 
     with open('%s/result_cross_validation.csv' % dir, 'w') as file:
         file.write('\n'.join([','.join(row) for row in log]))
 
     if len(voices) >= 2 and not args.noaudio:
         for sampler in samplers:
-            audio_out = audio.get_audio_vector(out[sampler], voices=voices)
-            write(
-                "%s/%s_%s.wav" % (dir, out_file, sampler), data=audio_out,
-                rate=audio.SAMPLE_RATE
-            )
+            for top_idx in range(no_top):
+                audio_out = audio.get_audio_vector(out[sampler][top_idx], voices=voices)
+                write(
+                    "%s/%s_top%s_%s.wav" % (dir, out_file, top_idx, sampler), 
+                    data=audio_out, rate=audio.SAMPLE_RATE
+                )
 
     if args.midi:
         for sampler in samplers:
-            midi_file = audio.save_inferences_to_midi(
-                all_voice_inferences[sampler], '%s/%s_%s.mid' %
-                (dir, sampler, out_file)
-            )
+            for top_idx in range(no_top):
+                midi_file = audio.save_inferences_to_midi(
+                    all_voice_inferences[sampler][top_idx], '%s/%s_top%s_%s.mid' %
+                    (dir, out_file, top_idx, sampler)
+                )
 
     # Enjoy some eargasming Bach!
     print('\n--------- DONE! ---------\n')
